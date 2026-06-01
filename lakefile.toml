@@ -1,0 +1,11 @@
+name = "Erdos1038Lean"
+version = "0.1.0"
+keywords = ["math", "certificate", "lean"]
+
+[leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+
+[[lean_lib]]
+name = "Erdos1038Lean"
+

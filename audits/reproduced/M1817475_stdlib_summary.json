@@ -1,0 +1,237 @@
+{
+  "input_problem": "EHP #1038 experimental finite-atom piecewise-shift certificate",
+  "input_status": "floating point only; not a formal/interval proof",
+  "M": 1.817475,
+  "base": 1.708,
+  "K": 560,
+  "h": 0.00019549107142857142,
+  "lane_starts_s": [
+    1e-07,
+    0.74046,
+    0.857540475,
+    0.9670155749999999
+  ],
+  "permutation_summary": [
+    {
+      "lane": 0,
+      "length": 560,
+      "is_permutation": true,
+      "nonidentity_count": 0,
+      "nonidentity_runs": []
+    },
+    {
+      "lane": 1,
+      "length": 560,
+      "is_permutation": true,
+      "nonidentity_count": 0,
+      "nonidentity_runs": []
+    },
+    {
+      "lane": 2,
+      "length": 560,
+      "is_permutation": true,
+      "nonidentity_count": 462,
+      "nonidentity_runs": [
+        {
+          "i0": 94,
+          "i1": 324,
+          "slot0": 257,
+          "slot1": 559
+        },
+        {
+          "i0": 329,
+          "i1": 559,
+          "slot0": 324,
+          "slot1": 94
+        }
+      ]
+    },
+    {
+      "lane": 3,
+      "length": 560,
+      "is_permutation": true,
+      "nonidentity_count": 168,
+      "nonidentity_runs": [
+        {
+          "i0": 0,
+          "i1": 16,
+          "slot0": 16,
+          "slot1": 240
+        },
+        {
+          "i0": 92,
+          "i1": 93,
+          "slot0": 93,
+          "slot1": 92
+        },
+        {
+          "i0": 240,
+          "i1": 255,
+          "slot0": 0,
+          "slot1": 15
+        },
+        {
+          "i0": 263,
+          "i1": 395,
+          "slot0": 325,
+          "slot1": 383
+        }
+      ]
+    }
+  ],
+  "all_lanes_are_permutations": true,
+  "num_blocks": 560,
+  "bad_required_blocks": 0,
+  "all_required_blocks_ok": true,
+  "worst_required": {
+    "block": 196,
+    "value": 6.5779496328799425e-06,
+    "argmin_y": 2.6216874304131084
+  },
+  "stored_worst": {
+    "block": 196,
+    "value": 6.5779496328799425e-06
+  },
+  "max_abs_margin_diff_from_stored": 4.440892098500626e-16,
+  "margin_quantiles": {
+    "min": 6.5779496328799425e-06,
+    "q05": 0.0003140843162071638,
+    "median": 0.0045223177170757856,
+    "q95": 0.012529985261241827,
+    "max": 0.022327940419158754
+  },
+  "top_12_tight_blocks": [
+    {
+      "block": 196,
+      "required_margin": 6.5779496328799425e-06,
+      "required_argmin_y": 2.6216874304131084,
+      "pi": [
+        196,
+        196,
+        412,
+        196
+      ]
+    },
+    {
+      "block": 17,
+      "required_margin": 1.0358643189878336e-05,
+      "required_argmin_y": 2.6844600135326857,
+      "pi": [
+        17,
+        17,
+        17,
+        17
+      ]
+    },
+    {
+      "block": 399,
+      "required_margin": 2.0758005893961595e-05,
+      "required_argmin_y": 2.441602504186055,
+      "pi": [
+        399,
+        399,
+        254,
+        399
+      ]
+    },
+    {
+      "block": 197,
+      "required_margin": 3.076324644435413e-05,
+      "required_argmin_y": 2.614486602117476,
+      "pi": [
+        197,
+        197,
+        360,
+        197
+      ]
+    },
+    {
+      "block": 195,
+      "required_margin": 4.716908689494925e-05,
+      "required_argmin_y": 2.6272344558537446,
+      "pi": [
+        195,
+        195,
+        430,
+        195
+      ]
+    },
+    {
+      "block": 198,
+      "required_margin": 5.8343459173215706e-05,
+      "required_argmin_y": 2.614602099175859,
+      "pi": [
+        198,
+        198,
+        361,
+        198
+      ]
+    },
+    {
+      "block": 400,
+      "required_margin": 7.585403569965177e-05,
+      "required_argmin_y": 2.4404750416994494,
+      "pi": [
+        400,
+        400,
+        253,
+        400
+      ]
+    },
+    {
+      "block": 199,
+      "required_margin": 8.610315684687286e-05,
+      "required_argmin_y": 2.764246277490651,
+      "pi": [
+        199,
+        199,
+        362,
+        199
+      ]
+    },
+    {
+      "block": 93,
+      "required_margin": 0.00010841656771978792,
+      "required_argmin_y": 0.7990988392857141,
+      "pi": [
+        93,
+        93,
+        93,
+        92
+      ]
+    },
+    {
+      "block": 200,
+      "required_margin": 0.00011400339036549134,
+      "required_argmin_y": 2.6148324126987905,
+      "pi": [
+        200,
+        200,
+        363,
+        200
+      ]
+    },
+    {
+      "block": 194,
+      "required_margin": 0.00012966796596480812,
+      "required_argmin_y": 2.769178575878259,
+      "pi": [
+        194,
+        194,
+        429,
+        194
+      ]
+    },
+    {
+      "block": 401,
+      "required_margin": 0.00013138800581136145,
+      "required_argmin_y": 2.43920973983632,
+      "pi": [
+        401,
+        401,
+        252,
+        401
+      ]
+    }
+  ]
+}

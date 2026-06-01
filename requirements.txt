@@ -1,0 +1,6 @@
+# The lightweight certificate checkers use only the Python standard library.
+#
+# Optional: regenerating the floating-point certificate with
+# scripts/gen_fast_custom.py uses NumPy/SciPy.
+numpy
+scipy

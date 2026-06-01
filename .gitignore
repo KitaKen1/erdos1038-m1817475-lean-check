@@ -1,0 +1,39 @@
+# macOS / editor noise
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Lean / Lake build outputs
+.lake/
+build/
+*.olean
+*.ilean
+*.c
+*.c.hash
+
+# Python local artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local virtual environments
+.venv/
+venv/
+env/
+
+# Local logs and temporary outputs
+*.log
+tmp/
+temp/
+
+# Generated per-block metadata from scripts/generate_all_blocks.py.
+# The Lean source files and all560_manifest.json are intentionally committed.
+Erdos1038Lean/M1817475/Block*.json
+
+# Optional local candidate outputs from rerunning the floating-point search.
+certificates/*candidate*.json
+certificates/*tmp*.json
+certificates/*test*.json

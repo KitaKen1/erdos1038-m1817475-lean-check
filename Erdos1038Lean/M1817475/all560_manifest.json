@@ -1,0 +1,10 @@
+{
+  "count": 560,
+  "lower_bound_mode": "float",
+  "total_left_boxes": 615,
+  "total_right_boxes": 56992,
+  "max_left_boxes": 13,
+  "max_right_boxes": 1865,
+  "max_right_block": 196,
+  "note": "This manifest describes generated Lean source files for the reduced finite rational-certificate layer, not a full formalization of the analytic reduction."
+}
