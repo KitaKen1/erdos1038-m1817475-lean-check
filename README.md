@@ -153,6 +153,7 @@ The repository is organized as follows.
 ```text
 README.md                         main description and reproduction guide
 .gitignore                        local build/cache ignore rules
+LICENSE                           repository license
 lakefile.toml                     Lean/Lake package definition
 lean-toolchain                    Lean version pin
 requirements.txt                  optional Python deps for certificate search
