@@ -1,2 +1,4 @@
 import Erdos1038Lean.RationalKernel
 import Erdos1038Lean.ReducedStatement
+import Erdos1038Lean.LogBridge
+import Erdos1038Lean.M1817475.AllBlocksLogBridge

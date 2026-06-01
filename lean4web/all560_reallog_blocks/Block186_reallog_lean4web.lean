@@ -1,0 +1,994 @@
+/-
+Self-contained Lean4Web paste file.
+Block 186 real-log V_i(y) > 0 check for the M=1.817475 candidate.
+
+This file includes the rational kernel, the generated block data,
+and the Mathlib Real.log bridge.  The final #check lines expose
+the block-level theorem whose type contains `0 < block...V y`.
+
+This is still only a block-level reduced-certificate check: it
+does not formalize the outer reduction from the original #1038
+problem, and the theorem excludes the singular atom locations.
+-/
+
+import Mathlib
+
+
+/-!
+# Rational box kernel for #1038 finite-atom checks
+
+This file is deliberately Mathlib-free.  It does not prove the analytic
+`Real.log` bridge.  It proves the finite arithmetic part that should later be
+connected to `Real.log` by a Mathlib file, following the Hua Xu certificate
+architecture.
+-/
+
+namespace Erdos1038Lean
+
+def ratAbs (x : Rat) : Rat :=
+  if x < 0 then -x else x
+
+def atanhLowerRat : Nat -> Rat -> Rat
+  | 0, _ => 0
+  | n + 1, t => atanhLowerRat n t + 2 * t ^ (2 * n + 1) / (2 * n + 1)
+
+def atanhUpperRat (n : Nat) (t : Rat) : Rat :=
+  atanhLowerRat n t + 2 * t ^ (2 * n + 1) / (1 - t ^ 2)
+
+def tInv (d : Rat) : Rat := (1 - d) / (1 + d)
+
+def tSelf (d : Rat) : Rat := (d - 1) / (d + 1)
+
+def logInvLowerRat (nPos nNeg : Nat) (d : Rat) : Rat :=
+  if d < 1 then
+    atanhLowerRat nPos (tInv d)
+  else
+    -atanhUpperRat nNeg (tSelf d)
+
+structure RatBox where
+  w1 : Rat
+  w2 : Rat
+  w3 : Rat
+  w4 : Rat
+  s1 : Rat
+  s2 : Rat
+  s3 : Rat
+  s4 : Rat
+  L : Rat
+  R : Rat
+  D0 : Rat
+  D1 : Rat
+  D2 : Rat
+  D3 : Rat
+  D4 : Rat
+  LB : Rat
+  deriving DecidableEq, Repr
+
+def RatBox.computedLower (b : RatBox) (nPos nNeg : Nat := 150) : Rat :=
+  logInvLowerRat nPos nNeg b.D0
+  + b.w1 * logInvLowerRat nPos nNeg b.D1
+  + b.w2 * logInvLowerRat nPos nNeg b.D2
+  + b.w3 * logInvLowerRat nPos nNeg b.D3
+  + b.w4 * logInvLowerRat nPos nNeg b.D4
+
+def RatBox.validFastBool (b : RatBox) : Bool :=
+  decide (
+    0 <= b.w1 /\ 0 <= b.w2 /\ 0 <= b.w3 /\ 0 <= b.w4 /\
+    b.L <= b.R /\
+    0 < b.D0 /\ 0 < b.D1 /\ 0 < b.D2 /\ 0 < b.D3 /\ 0 < b.D4 /\
+    0 < b.LB /\
+    ratAbs (b.L - 0) <= b.D0 /\ ratAbs (b.R - 0) <= b.D0 /\
+    ratAbs (b.L - b.s1) <= b.D1 /\ ratAbs (b.R - b.s1) <= b.D1 /\
+    ratAbs (b.L - b.s2) <= b.D2 /\ ratAbs (b.R - b.s2) <= b.D2 /\
+    ratAbs (b.L - b.s3) <= b.D3 /\ ratAbs (b.R - b.s3) <= b.D3 /\
+    ratAbs (b.L - b.s4) <= b.D4 /\ ratAbs (b.R - b.s4) <= b.D4)
+
+def RatBox.validComputedBool (b : RatBox) (nPos nNeg : Nat := 150) : Bool :=
+  b.validFastBool && decide (b.LB = b.computedLower nPos nNeg)
+
+def RatBox.validComputedPositiveBool (b : RatBox) (nPos nNeg : Nat := 150) : Bool :=
+  b.validFastBool && decide (0 < b.computedLower nPos nNeg)
+
+def allBoxesFastValid (boxes : List RatBox) : Bool :=
+  boxes.all (fun b => b.validFastBool)
+
+def allBoxesComputedValid (boxes : List RatBox) (nPos nNeg : Nat := 150) : Bool :=
+  boxes.all (fun b => b.validComputedBool nPos nNeg)
+
+def allBoxesComputedPositiveValid (boxes : List RatBox) (nPos nNeg : Nat := 150) : Bool :=
+  boxes.all (fun b => b.validComputedPositiveBool nPos nNeg)
+
+def allBoxesValid (boxes : List RatBox) : Bool :=
+  allBoxesComputedPositiveValid boxes 150 150
+
+def coversFromBool : List RatBox -> Rat -> Rat -> Bool
+  | [], _lo, _hi => false
+  | [b], lo, hi => decide (b.L <= lo /\ hi <= b.R)
+  | b :: b' :: bs, lo, hi =>
+      decide (b.L <= lo /\ lo <= b.R) && coversFromBool (b' :: bs) b.R hi
+
+def boxCount (xs : List RatBox) : Nat := xs.length
+
+def worstLower? (boxes : List RatBox) : Option Rat :=
+  match boxes.map (fun b => b.LB) with
+  | [] => none
+  | x :: xs => some (xs.foldl min x)
+
+end Erdos1038Lean
+
+
+/-!
+# Real-log bridge for rational boxes
+
+This file starts the Mathlib layer connecting the exact rational box checks to
+actual logarithmic potentials over `ℝ`.
+
+The pure certificate files check each `RatBox` by exact rational arithmetic.
+Here we prove the reusable analytic bridge for one rational box: if Lean has
+checked a positive computed rational lower bound, then the corresponding
+five-term real logarithmic potential is positive on the box, away from the
+singular atom locations.
+-/
+
+namespace Erdos1038Lean
+
+noncomputable section
+
+open Finset Set
+
+lemma bool_left_of_and_eq_true {a b : Bool} (h : (a && b) = true) : a = true := by
+  cases a <;> cases b <;> simp_all
+
+lemma bool_right_of_and_eq_true {a b : Bool} (h : (a && b) = true) : b = true := by
+  cases a <;> cases b <;> simp_all
+
+def atanhLowerReal (n : Nat) (t : ℝ) : ℝ :=
+  2 * (∑ i ∈ Finset.range n, t ^ (2 * i + 1) / (2 * (i : ℝ) + 1))
+
+def atanhUpperReal (n : Nat) (t : ℝ) : ℝ :=
+  atanhLowerReal n t + 2 * t ^ (2 * n + 1) / (1 - t ^ 2)
+
+lemma atanhLowerRat_cast (n : Nat) (t : Rat) :
+    ((atanhLowerRat n t : Rat) : ℝ) = atanhLowerReal n (t : ℝ) := by
+  induction n with
+  | zero =>
+      simp [atanhLowerRat, atanhLowerReal]
+  | succ n ih =>
+      rw [atanhLowerRat]
+      simp only [Rat.cast_add, Rat.cast_div, Rat.cast_mul, Rat.cast_ofNat, Rat.cast_pow]
+      rw [ih]
+      simp [atanhLowerReal, Finset.sum_range_succ]
+      ring
+
+lemma atanhUpperRat_cast (n : Nat) (t : Rat) :
+    ((atanhUpperRat n t : Rat) : ℝ) = atanhUpperReal n (t : ℝ) := by
+  simp [atanhUpperRat, atanhUpperReal, atanhLowerRat_cast]
+
+lemma atanhLowerRat_le_log_of_mobius
+    (r t : Rat) (n : Nat)
+    (ht0 : 0 ≤ (t : ℝ)) (ht1 : (t : ℝ) < 1)
+    (hr : (r : ℝ) = (1 + (t : ℝ)) / (1 - (t : ℝ))) :
+    ((atanhLowerRat n t : Rat) : ℝ) ≤ Real.log (r : ℝ) := by
+  have h := Real.sum_range_le_log_div ht0 ht1 n
+  rw [atanhLowerRat_cast]
+  unfold atanhLowerReal
+  rw [hr]
+  nlinarith
+
+lemma log_le_atanhUpperRat_of_mobius
+    (r t : Rat) (n : Nat)
+    (ht0 : 0 ≤ (t : ℝ)) (ht1 : (t : ℝ) < 1)
+    (hr : (r : ℝ) = (1 + (t : ℝ)) / (1 - (t : ℝ))) :
+    Real.log (r : ℝ) ≤ ((atanhUpperRat n t : Rat) : ℝ) := by
+  have h := Real.log_div_le_sum_range_add ht0 ht1 n
+  rw [atanhUpperRat_cast]
+  unfold atanhUpperReal atanhLowerReal
+  rw [hr]
+  have h2 := mul_le_mul_of_nonneg_left h (by norm_num : (0 : ℝ) ≤ 2)
+  calc
+    Real.log ((1 + (t : ℝ)) / (1 - (t : ℝ)))
+        = 2 * (1 / 2 * Real.log ((1 + (t : ℝ)) / (1 - (t : ℝ)))) := by ring
+    _ ≤ 2 * (∑ i ∈ Finset.range n,
+          (t : ℝ) ^ (2 * i + 1) / (2 * (i : ℝ) + 1)
+        + (t : ℝ) ^ (2 * n + 1) / (1 - (t : ℝ) ^ 2)) := h2
+    _ = 2 * ∑ i ∈ Finset.range n,
+          (t : ℝ) ^ (2 * i + 1) / (2 * (i : ℝ) + 1)
+        + 2 * (t : ℝ) ^ (2 * n + 1) / (1 - (t : ℝ) ^ 2) := by ring
+
+lemma tInv_cast_eq (d : Rat) :
+    (tInv d : ℝ) = (1 - (d : ℝ)) / (1 + (d : ℝ)) := by
+  unfold tInv
+  norm_num
+
+lemma tSelf_cast_eq (d : Rat) :
+    (tSelf d : ℝ) = ((d : ℝ) - 1) / ((d : ℝ) + 1) := by
+  unfold tSelf
+  norm_num
+
+lemma logInvLowerRat_le_log_inv (nPos nNeg : Nat) (d : Rat) (hd : 0 < d) :
+    ((logInvLowerRat nPos nNeg d : Rat) : ℝ) ≤ Real.log ((d : ℝ)⁻¹) := by
+  by_cases hlt : d < 1
+  · simp [logInvLowerRat, hlt]
+    have hdR : (0 : ℝ) < d := by exact_mod_cast hd
+    have hltR : (d : ℝ) < 1 := by exact_mod_cast hlt
+    have htEq := tInv_cast_eq d
+    have hden : 0 < 1 + (d : ℝ) := by positivity
+    have ht0 : 0 ≤ (tInv d : ℝ) := by
+      rw [htEq]
+      exact div_nonneg (sub_nonneg.mpr hltR.le) hden.le
+    have ht1 : (tInv d : ℝ) < 1 := by
+      rw [htEq]
+      field_simp [hden.ne']
+      linarith
+    have hr : ((1 / d : Rat) : ℝ) =
+        (1 + (tInv d : ℝ)) / (1 - (tInv d : ℝ)) := by
+      rw [htEq]
+      norm_num
+      field_simp [show (d : ℝ) ≠ 0 by positivity, hden.ne']
+      ring
+    simpa using atanhLowerRat_le_log_of_mobius (1 / d) (tInv d) nPos ht0 ht1 hr
+  · simp [logInvLowerRat, hlt]
+    have hge : (1 : Rat) ≤ d := le_of_not_gt hlt
+    have hgeR : (1 : ℝ) ≤ d := by exact_mod_cast hge
+    have htEq := tSelf_cast_eq d
+    have hden : 0 < (d : ℝ) + 1 := by positivity
+    have ht0 : 0 ≤ (tSelf d : ℝ) := by
+      rw [htEq]
+      exact div_nonneg (sub_nonneg.mpr hgeR) hden.le
+    have ht1 : (tSelf d : ℝ) < 1 := by
+      rw [htEq]
+      field_simp [hden.ne']
+      linarith
+    have hr : (d : ℝ) =
+        (1 + (tSelf d : ℝ)) / (1 - (tSelf d : ℝ)) := by
+      rw [htEq]
+      field_simp [hden.ne']
+      ring
+    exact log_le_atanhUpperRat_of_mobius d (tSelf d) nNeg ht0 ht1 hr
+
+lemma logInvLowerRat_le_log_actual_inv
+    (nPos nNeg : Nat) (d : Rat) {actual : ℝ}
+    (hd : 0 < d) (hactual : 0 < actual) (hle : actual ≤ (d : ℝ)) :
+    ((logInvLowerRat nPos nNeg d : Rat) : ℝ) ≤ Real.log actual⁻¹ := by
+  have hbase := logInvLowerRat_le_log_inv nPos nNeg d hd
+  have hdinv : ((d : ℝ)⁻¹) ≤ actual⁻¹ := by
+    exact (inv_le_inv₀ (by exact_mod_cast hd : (0 : ℝ) < d) hactual).2 hle
+  exact hbase.trans (Real.log_le_log (inv_pos.mpr (by exact_mod_cast hd)) hdinv)
+
+lemma ratAbs_cast (x : Rat) :
+    ((ratAbs x : Rat) : ℝ) = |(x : ℝ)| := by
+  unfold ratAbs
+  by_cases hx : x < 0
+  · simp [hx]
+    have hxR : (x : ℝ) < 0 := by exact_mod_cast hx
+    rw [abs_of_neg hxR]
+  · simp [hx]
+    have hxR : 0 ≤ (x : ℝ) := by exact_mod_cast le_of_not_gt hx
+    rw [abs_of_nonneg hxR]
+
+lemma real_abs_bound_of_ratAbs {x D : Rat}
+    (h : ratAbs x ≤ D) :
+    |(x : ℝ)| ≤ (D : ℝ) := by
+  have hc : ((ratAbs x : Rat) : ℝ) ≤ (D : ℝ) := by exact_mod_cast h
+  simpa [ratAbs_cast] using hc
+
+lemma abs_sub_le_of_box_endpoints
+    {L R p D y : ℝ}
+    (hy : y ∈ Icc L R)
+    (hL : |L - p| ≤ D)
+    (hR : |R - p| ≤ D) :
+    |y - p| ≤ D := by
+  rw [abs_sub_le_iff] at hL hR ⊢
+  constructor <;> linarith [hy.1, hy.2, hL.1, hL.2, hR.1, hR.2]
+
+def RatBox.realPotential (b : RatBox) (y : ℝ) : ℝ :=
+    Real.log (|y|)⁻¹
+  + (b.w1 : ℝ) * Real.log (|y - (b.s1 : ℝ)|)⁻¹
+  + (b.w2 : ℝ) * Real.log (|y - (b.s2 : ℝ)|)⁻¹
+  + (b.w3 : ℝ) * Real.log (|y - (b.s3 : ℝ)|)⁻¹
+  + (b.w4 : ℝ) * Real.log (|y - (b.s4 : ℝ)|)⁻¹
+
+def ratPotential
+    (w1 w2 w3 w4 s1 s2 s3 s4 : Rat) (y : ℝ) : ℝ :=
+    Real.log (|y|)⁻¹
+  + (w1 : ℝ) * Real.log (|y - (s1 : ℝ)|)⁻¹
+  + (w2 : ℝ) * Real.log (|y - (s2 : ℝ)|)⁻¹
+  + (w3 : ℝ) * Real.log (|y - (s3 : ℝ)|)⁻¹
+  + (w4 : ℝ) * Real.log (|y - (s4 : ℝ)|)⁻¹
+
+def RatBox.sameParamsBool
+    (b : RatBox) (w1 w2 w3 w4 s1 s2 s3 s4 : Rat) : Bool :=
+  decide (
+    b.w1 = w1 /\ b.w2 = w2 /\ b.w3 = w3 /\ b.w4 = w4 /\
+    b.s1 = s1 /\ b.s2 = s2 /\ b.s3 = s3 /\ b.s4 = s4)
+
+def allBoxesSameParams
+    (boxes : List RatBox) (w1 w2 w3 w4 s1 s2 s3 s4 : Rat) : Bool :=
+  boxes.all (fun b => b.sameParamsBool w1 w2 w3 w4 s1 s2 s3 s4)
+
+lemma RatBox.sameParamsBool_eq_true_iff
+    (b : RatBox) (w1 w2 w3 w4 s1 s2 s3 s4 : Rat) :
+    b.sameParamsBool w1 w2 w3 w4 s1 s2 s3 s4 = true ↔
+      b.w1 = w1 /\ b.w2 = w2 /\ b.w3 = w3 /\ b.w4 = w4 /\
+      b.s1 = s1 /\ b.s2 = s2 /\ b.s3 = s3 /\ b.s4 = s4 := by
+  unfold RatBox.sameParamsBool
+  constructor
+  · intro h
+    exact of_decide_eq_true h
+  · intro h
+    exact decide_eq_true h
+
+lemma RatBox.realPotential_eq_ratPotential_of_sameParams
+    {b : RatBox} {w1 w2 w3 w4 s1 s2 s3 s4 : Rat}
+    (h : b.sameParamsBool w1 w2 w3 w4 s1 s2 s3 s4 = true) :
+    b.realPotential = ratPotential w1 w2 w3 w4 s1 s2 s3 s4 := by
+  rcases (b.sameParamsBool_eq_true_iff w1 w2 w3 w4 s1 s2 s3 s4).mp h with
+    ⟨hw1, hw2, hw3, hw4, hs1, hs2, hs3, hs4⟩
+  funext y
+  simp [RatBox.realPotential, ratPotential, hw1, hw2, hw3, hw4, hs1, hs2, hs3, hs4]
+
+lemma sameParamsBool_of_mem_allBoxesSameParams
+    {boxes : List RatBox} {b : RatBox} {w1 w2 w3 w4 s1 s2 s3 s4 : Rat}
+    (hparams : allBoxesSameParams boxes w1 w2 w3 w4 s1 s2 s3 s4 = true)
+    (hb : b ∈ boxes) :
+    b.sameParamsBool w1 w2 w3 w4 s1 s2 s3 s4 = true := by
+  unfold allBoxesSameParams at hparams
+  exact List.all_eq_true.mp hparams b hb
+
+lemma RatBox.computedLower_le_realPotential
+    (b : RatBox) (nPos nNeg : Nat) {y : ℝ}
+    (hw1 : 0 ≤ (b.w1 : ℝ))
+    (hw2 : 0 ≤ (b.w2 : ℝ))
+    (hw3 : 0 ≤ (b.w3 : ℝ))
+    (hw4 : 0 ≤ (b.w4 : ℝ))
+    (hD0 : 0 < b.D0) (hD1 : 0 < b.D1) (hD2 : 0 < b.D2)
+    (hD3 : 0 < b.D3) (hD4 : 0 < b.D4)
+    (hy0 : 0 < |y|)
+    (hy1 : 0 < |y - (b.s1 : ℝ)|)
+    (hy2 : 0 < |y - (b.s2 : ℝ)|)
+    (hy3 : 0 < |y - (b.s3 : ℝ)|)
+    (hy4 : 0 < |y - (b.s4 : ℝ)|)
+    (hb0 : |y| ≤ (b.D0 : ℝ))
+    (hb1 : |y - (b.s1 : ℝ)| ≤ (b.D1 : ℝ))
+    (hb2 : |y - (b.s2 : ℝ)| ≤ (b.D2 : ℝ))
+    (hb3 : |y - (b.s3 : ℝ)| ≤ (b.D3 : ℝ))
+    (hb4 : |y - (b.s4 : ℝ)| ≤ (b.D4 : ℝ)) :
+    ((b.computedLower nPos nNeg : Rat) : ℝ) ≤ b.realPotential y := by
+  have h0 := logInvLowerRat_le_log_actual_inv nPos nNeg b.D0 hD0 hy0 hb0
+  have h1 := logInvLowerRat_le_log_actual_inv nPos nNeg b.D1 hD1 hy1 hb1
+  have h2 := logInvLowerRat_le_log_actual_inv nPos nNeg b.D2 hD2 hy2 hb2
+  have h3 := logInvLowerRat_le_log_actual_inv nPos nNeg b.D3 hD3 hy3 hb3
+  have h4 := logInvLowerRat_le_log_actual_inv nPos nNeg b.D4 hD4 hy4 hb4
+  have h1w :
+      (b.w1 : ℝ) * ((logInvLowerRat nPos nNeg b.D1 : Rat) : ℝ)
+        ≤ (b.w1 : ℝ) * Real.log (|y - (b.s1 : ℝ)|)⁻¹ :=
+    mul_le_mul_of_nonneg_left h1 hw1
+  have h2w :
+      (b.w2 : ℝ) * ((logInvLowerRat nPos nNeg b.D2 : Rat) : ℝ)
+        ≤ (b.w2 : ℝ) * Real.log (|y - (b.s2 : ℝ)|)⁻¹ :=
+    mul_le_mul_of_nonneg_left h2 hw2
+  have h3w :
+      (b.w3 : ℝ) * ((logInvLowerRat nPos nNeg b.D3 : Rat) : ℝ)
+        ≤ (b.w3 : ℝ) * Real.log (|y - (b.s3 : ℝ)|)⁻¹ :=
+    mul_le_mul_of_nonneg_left h3 hw3
+  have h4w :
+      (b.w4 : ℝ) * ((logInvLowerRat nPos nNeg b.D4 : Rat) : ℝ)
+        ≤ (b.w4 : ℝ) * Real.log (|y - (b.s4 : ℝ)|)⁻¹ :=
+    mul_le_mul_of_nonneg_left h4 hw4
+  calc
+    ((b.computedLower nPos nNeg : Rat) : ℝ)
+        = ((logInvLowerRat nPos nNeg b.D0 : Rat) : ℝ)
+          + (b.w1 : ℝ) * ((logInvLowerRat nPos nNeg b.D1 : Rat) : ℝ)
+          + (b.w2 : ℝ) * ((logInvLowerRat nPos nNeg b.D2 : Rat) : ℝ)
+          + (b.w3 : ℝ) * ((logInvLowerRat nPos nNeg b.D3 : Rat) : ℝ)
+          + (b.w4 : ℝ) * ((logInvLowerRat nPos nNeg b.D4 : Rat) : ℝ) := by
+            simp [RatBox.computedLower]
+    _ ≤ Real.log (|y|)⁻¹
+          + (b.w1 : ℝ) * Real.log (|y - (b.s1 : ℝ)|)⁻¹
+          + (b.w2 : ℝ) * Real.log (|y - (b.s2 : ℝ)|)⁻¹
+          + (b.w3 : ℝ) * Real.log (|y - (b.s3 : ℝ)|)⁻¹
+          + (b.w4 : ℝ) * Real.log (|y - (b.s4 : ℝ)|)⁻¹ := by
+            nlinarith
+    _ = b.realPotential y := by
+            simp [RatBox.realPotential]
+
+lemma RatBox.validFastBool_eq_true_iff (b : RatBox) :
+    b.validFastBool = true ↔
+      0 ≤ b.w1 ∧ 0 ≤ b.w2 ∧ 0 ≤ b.w3 ∧ 0 ≤ b.w4 ∧
+      b.L ≤ b.R ∧
+      0 < b.D0 ∧ 0 < b.D1 ∧ 0 < b.D2 ∧ 0 < b.D3 ∧ 0 < b.D4 ∧
+      0 < b.LB ∧
+      ratAbs (b.L - 0) ≤ b.D0 ∧ ratAbs (b.R - 0) ≤ b.D0 ∧
+      ratAbs (b.L - b.s1) ≤ b.D1 ∧ ratAbs (b.R - b.s1) ≤ b.D1 ∧
+      ratAbs (b.L - b.s2) ≤ b.D2 ∧ ratAbs (b.R - b.s2) ≤ b.D2 ∧
+      ratAbs (b.L - b.s3) ≤ b.D3 ∧ ratAbs (b.R - b.s3) ≤ b.D3 ∧
+      ratAbs (b.L - b.s4) ≤ b.D4 ∧ ratAbs (b.R - b.s4) ≤ b.D4 := by
+  unfold RatBox.validFastBool
+  constructor
+  · intro h
+    exact of_decide_eq_true h
+  · intro h
+    exact decide_eq_true h
+
+lemma RatBox.validComputedPositiveBool_eq_true_iff
+    (b : RatBox) (nPos nNeg : Nat) :
+    b.validComputedPositiveBool nPos nNeg = true ↔
+      b.validFastBool = true ∧ 0 < b.computedLower nPos nNeg := by
+  unfold RatBox.validComputedPositiveBool
+  constructor
+  · intro h
+    by_cases hfast : b.validFastBool = true
+    · constructor
+      · exact hfast
+      · rw [hfast] at h
+        simp at h
+        exact h
+    · have hfastFalse : b.validFastBool = false := by
+        cases hb : b.validFastBool <;> simp_all
+      rw [hfastFalse] at h
+      simp at h
+  · intro h
+    rw [h.1]
+    simp [decide_eq_true h.2]
+
+lemma validComputedPositiveBool_of_mem_allBoxesValid
+    {boxes : List RatBox} {b : RatBox}
+    (hboxes : allBoxesValid boxes = true)
+    (hb : b ∈ boxes) :
+    b.validComputedPositiveBool 150 150 = true := by
+  unfold allBoxesValid allBoxesComputedPositiveValid at hboxes
+  exact List.all_eq_true.mp hboxes b hb
+
+lemma exists_mem_box_of_coversFromBool
+    {boxes : List RatBox} {lo hi : Rat}
+    (hcovers : coversFromBool boxes lo hi = true)
+    {y : ℝ} (hy : y ∈ Icc (lo : ℝ) (hi : ℝ)) :
+    ∃ b ∈ boxes, y ∈ Icc (b.L : ℝ) (b.R : ℝ) := by
+  induction boxes generalizing lo with
+  | nil =>
+      simp [coversFromBool] at hcovers
+  | cons b bs ih =>
+      cases bs with
+      | nil =>
+          have hprop : b.L ≤ lo ∧ hi ≤ b.R := by
+            have hdec : decide (b.L ≤ lo ∧ hi ≤ b.R) = true := by
+              simpa [coversFromBool] using hcovers
+            exact of_decide_eq_true hdec
+          rcases hprop with ⟨hbL, hhiR⟩
+          refine ⟨b, by simp, ?_⟩
+          constructor
+          · have hbLR : (b.L : ℝ) ≤ (lo : ℝ) := by exact_mod_cast hbL
+            linarith [hbLR, hy.1]
+          · have hhiRR : (hi : ℝ) ≤ (b.R : ℝ) := by exact_mod_cast hhiR
+            linarith [hhiRR, hy.2]
+      | cons b' bs =>
+          have hbool :
+              decide (b.L ≤ lo ∧ lo ≤ b.R) &&
+                  coversFromBool (b' :: bs) b.R hi = true := by
+            simpa [coversFromBool] using hcovers
+          have hheadBool : decide (b.L ≤ lo ∧ lo ≤ b.R) = true := by
+            cases h : decide (b.L ≤ lo ∧ lo ≤ b.R) <;> simp [h] at hbool ⊢
+          have hrest : coversFromBool (b' :: bs) b.R hi = true := by
+            cases h : decide (b.L ≤ lo ∧ lo ≤ b.R) <;> simp [h] at hbool
+            exact hbool
+          have hhead : b.L ≤ lo ∧ lo ≤ b.R := of_decide_eq_true hheadBool
+          rcases hhead with ⟨hbL, _hloR⟩
+          by_cases hyR : y ≤ (b.R : ℝ)
+          · refine ⟨b, by simp, ?_⟩
+            constructor
+            · have hbLR : (b.L : ℝ) ≤ (lo : ℝ) := by exact_mod_cast hbL
+              linarith [hbLR, hy.1]
+            · exact hyR
+          · have hbRy : (b.R : ℝ) ≤ y := le_of_lt (lt_of_not_ge hyR)
+            have hy' : y ∈ Icc (b.R : ℝ) (hi : ℝ) := ⟨hbRy, hy.2⟩
+            rcases ih hrest hy' with ⟨b'', hb''mem, hby⟩
+            exact ⟨b'', by simp [hb''mem], hby⟩
+
+theorem RatBox.realPotential_pos_of_validComputedPositive
+    {b : RatBox} {nPos nNeg : Nat} {y : ℝ}
+    (hvalid : b.validComputedPositiveBool nPos nNeg = true)
+    (hy : y ∈ Icc (b.L : ℝ) (b.R : ℝ))
+    (hy0ne : y ≠ 0)
+    (hy1ne : y ≠ (b.s1 : ℝ))
+    (hy2ne : y ≠ (b.s2 : ℝ))
+    (hy3ne : y ≠ (b.s3 : ℝ))
+    (hy4ne : y ≠ (b.s4 : ℝ)) :
+    0 < b.realPotential y := by
+  rcases (RatBox.validComputedPositiveBool_eq_true_iff b nPos nNeg).mp hvalid with
+    ⟨hfast, hcomp⟩
+  rcases (RatBox.validFastBool_eq_true_iff b).mp hfast with
+    ⟨hw1, hw2, hw3, hw4, _hLR,
+      hD0, hD1, hD2, hD3, hD4, _hLB,
+      hL0, hR0, hL1, hR1, hL2, hR2, hL3, hR3, hL4, hR4⟩
+  have hb0 : |y| ≤ (b.D0 : ℝ) := by
+    simpa using abs_sub_le_of_box_endpoints
+      (L := (b.L : ℝ)) (R := (b.R : ℝ)) (p := 0) (D := (b.D0 : ℝ)) hy
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hL0)
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hR0)
+  have hb1 : |y - (b.s1 : ℝ)| ≤ (b.D1 : ℝ) :=
+    abs_sub_le_of_box_endpoints
+      (L := (b.L : ℝ)) (R := (b.R : ℝ)) (p := (b.s1 : ℝ)) (D := (b.D1 : ℝ)) hy
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hL1)
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hR1)
+  have hb2 : |y - (b.s2 : ℝ)| ≤ (b.D2 : ℝ) :=
+    abs_sub_le_of_box_endpoints
+      (L := (b.L : ℝ)) (R := (b.R : ℝ)) (p := (b.s2 : ℝ)) (D := (b.D2 : ℝ)) hy
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hL2)
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hR2)
+  have hb3 : |y - (b.s3 : ℝ)| ≤ (b.D3 : ℝ) :=
+    abs_sub_le_of_box_endpoints
+      (L := (b.L : ℝ)) (R := (b.R : ℝ)) (p := (b.s3 : ℝ)) (D := (b.D3 : ℝ)) hy
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hL3)
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hR3)
+  have hb4 : |y - (b.s4 : ℝ)| ≤ (b.D4 : ℝ) :=
+    abs_sub_le_of_box_endpoints
+      (L := (b.L : ℝ)) (R := (b.R : ℝ)) (p := (b.s4 : ℝ)) (D := (b.D4 : ℝ)) hy
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hL4)
+      (by simpa [Rat.cast_sub] using real_abs_bound_of_ratAbs hR4)
+  have hle := b.computedLower_le_realPotential nPos nNeg
+    (by exact_mod_cast hw1) (by exact_mod_cast hw2)
+    (by exact_mod_cast hw3) (by exact_mod_cast hw4)
+    hD0 hD1 hD2 hD3 hD4
+    (abs_pos.mpr hy0ne)
+    (abs_pos.mpr (sub_ne_zero.mpr hy1ne))
+    (abs_pos.mpr (sub_ne_zero.mpr hy2ne))
+    (abs_pos.mpr (sub_ne_zero.mpr hy3ne))
+    (abs_pos.mpr (sub_ne_zero.mpr hy4ne))
+    hb0 hb1 hb2 hb3 hb4
+  have hcompR : (0 : ℝ) < ((b.computedLower nPos nNeg : Rat) : ℝ) := by
+    exact_mod_cast hcomp
+  exact hcompR.trans_le hle
+
+theorem RatBox.realPotential_pos_of_mem_allBoxesValid
+    {boxes : List RatBox} {b : RatBox} {y : ℝ}
+    (hboxes : allBoxesValid boxes = true)
+    (hb : b ∈ boxes)
+    (hy : y ∈ Icc (b.L : ℝ) (b.R : ℝ))
+    (hy0ne : y ≠ 0)
+    (hy1ne : y ≠ (b.s1 : ℝ))
+    (hy2ne : y ≠ (b.s2 : ℝ))
+    (hy3ne : y ≠ (b.s3 : ℝ))
+    (hy4ne : y ≠ (b.s4 : ℝ)) :
+    0 < b.realPotential y := by
+  exact RatBox.realPotential_pos_of_validComputedPositive
+    (validComputedPositiveBool_of_mem_allBoxesValid hboxes hb)
+    hy hy0ne hy1ne hy2ne hy3ne hy4ne
+
+theorem exists_box_realPotential_pos_of_allBoxesValid_and_covers
+    {boxes : List RatBox} {lo hi : Rat} {y : ℝ}
+    (hboxes : allBoxesValid boxes = true)
+    (hcovers : coversFromBool boxes lo hi = true)
+    (hy : y ∈ Icc (lo : ℝ) (hi : ℝ)) :
+    ∃ b ∈ boxes, y ∈ Icc (b.L : ℝ) (b.R : ℝ) ∧
+      (y ≠ 0 →
+       y ≠ (b.s1 : ℝ) →
+       y ≠ (b.s2 : ℝ) →
+       y ≠ (b.s3 : ℝ) →
+       y ≠ (b.s4 : ℝ) →
+       0 < b.realPotential y) := by
+  rcases exists_mem_box_of_coversFromBool hcovers hy with ⟨b, hb, hby⟩
+  refine ⟨b, hb, hby, ?_⟩
+  intro hy0 hy1 hy2 hy3 hy4
+  exact b.realPotential_pos_of_mem_allBoxesValid hboxes hb hby hy0 hy1 hy2 hy3 hy4
+
+theorem ratPotential_pos_of_allBoxesValid_covers_sameParams
+    {boxes : List RatBox} {lo hi w1 w2 w3 w4 s1 s2 s3 s4 : Rat} {y : ℝ}
+    (hboxes : allBoxesValid boxes = true)
+    (hcovers : coversFromBool boxes lo hi = true)
+    (hparams : allBoxesSameParams boxes w1 w2 w3 w4 s1 s2 s3 s4 = true)
+    (hy : y ∈ Icc (lo : ℝ) (hi : ℝ))
+    (hy0ne : y ≠ 0)
+    (hy1ne : y ≠ (s1 : ℝ))
+    (hy2ne : y ≠ (s2 : ℝ))
+    (hy3ne : y ≠ (s3 : ℝ))
+    (hy4ne : y ≠ (s4 : ℝ)) :
+    0 < ratPotential w1 w2 w3 w4 s1 s2 s3 s4 y := by
+  rcases exists_mem_box_of_coversFromBool hcovers hy with ⟨b, hb, hby⟩
+  have hbparams := sameParamsBool_of_mem_allBoxesSameParams hparams hb
+  rcases (b.sameParamsBool_eq_true_iff w1 w2 w3 w4 s1 s2 s3 s4).mp hbparams with
+    ⟨hw1, hw2, hw3, hw4, hs1, hs2, hs3, hs4⟩
+  have hbpos : 0 < b.realPotential y := by
+    exact b.realPotential_pos_of_mem_allBoxesValid hboxes hb hby
+      hy0ne
+      (by simpa [hs1] using hy1ne)
+      (by simpa [hs2] using hy2ne)
+      (by simpa [hs3] using hy3ne)
+      (by simpa [hs4] using hy4ne)
+  simpa [RatBox.realPotential, ratPotential, hw1, hw2, hw3, hw4, hs1, hs2, hs3, hs4] using hbpos
+
+end
+
+end Erdos1038Lean
+
+
+set_option maxHeartbeats 0
+set_option maxRecDepth 100000
+
+namespace Erdos1038Lean
+namespace M1817475
+namespace Block186
+
+def block186LeftL : Rat := ((39045908482142857223 : Rat) / 50000000000000000000)
+def block186LeftR : Rat := ((19527841517857142897 : Rat) / 25000000000000000000)
+def block186RightL : Rat := ((89045908482142857223 : Rat) / 50000000000000000000)
+def block186RightR : Rat := ((69527841517857142897 : Rat) / 25000000000000000000)
+
+def block186LeftBoxes : List RatBox := [
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((39045908482142857223 : Rat) / 50000000000000000000), R := ((19527841517857142897 : Rat) / 25000000000000000000), D0 := ((19527841517857142897 : Rat) / 25000000000000000000), D1 := ((51827846517857142777 : Rat) / 50000000000000000000), D2 := ((88850841517857142777 : Rat) / 50000000000000000000), D3 := ((48500942678571428481 : Rat) / 25000000000000000000), D4 := ((100178620267857137777 : Rat) / 50000000000000000000), LB := ((5619719986725003 : Rat) / 10000000000000000000) }
+]
+
+def block186LeftCertificate : Bool :=
+  allBoxesValid block186LeftBoxes &&
+  coversFromBool block186LeftBoxes block186LeftL block186LeftR
+
+theorem block186LeftCertificate_eq_true :
+    block186LeftCertificate = true := by
+  native_decide
+
+def block186RightChunk000 : List RatBox := [
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((89045908482142857223 : Rat) / 50000000000000000000), R := ((18174751 : Rat) / 10000000), D0 := ((18174751 : Rat) / 10000000), D1 := ((1827846517857142777 : Rat) / 50000000000000000000), D2 := ((38850841517857142777 : Rat) / 50000000000000000000), D3 := ((23500942678571428481 : Rat) / 25000000000000000000), D4 := ((50178620267857137777 : Rat) / 50000000000000000000), LB := ((657127641883827 : Rat) / 125000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((18174751 : Rat) / 10000000), R := ((43754101 : Rat) / 20000000), D0 := ((43754101 : Rat) / 20000000), D1 := ((7404599 : Rat) / 20000000), D2 := ((7404599 : Rat) / 10000000), D3 := ((9034807767857142837 : Rat) / 10000000000000000000), D4 := ((9670154749999999 : Rat) / 10000000000000000), LB := ((2482889535637141 : Rat) / 2500000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((43754101 : Rat) / 20000000), R := ((94912801 : Rat) / 40000000), D0 := ((94912801 : Rat) / 40000000), D1 := ((22213797 : Rat) / 40000000), D2 := ((7404599 : Rat) / 20000000), D3 := ((5332508267857142837 : Rat) / 10000000000000000000), D4 := ((5967855249999999 : Rat) / 10000000000000000), LB := ((16742025908191163 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((94912801 : Rat) / 40000000), R := ((197230201 : Rat) / 80000000), D0 := ((197230201 : Rat) / 80000000), D1 := ((51832193 : Rat) / 80000000), D2 := ((7404599 : Rat) / 40000000), D3 := ((3481358517857142837 : Rat) / 10000000000000000000), D4 := ((4116705499999999 : Rat) / 10000000000000000), LB := ((1349476198884847 : Rat) / 10000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((197230201 : Rat) / 80000000), R := ((401865001 : Rat) / 160000000), D0 := ((401865001 : Rat) / 160000000), D1 := ((22213797 : Rat) / 32000000), D2 := ((7404599 : Rat) / 80000000), D3 := ((2555783642857142837 : Rat) / 10000000000000000000), D4 := ((3191130624999999 : Rat) / 10000000000000000), LB := ((7331284804859171 : Rat) / 100000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((401865001 : Rat) / 160000000), R := ((811134601 : Rat) / 320000000), D0 := ((811134601 : Rat) / 320000000), D1 := ((229542569 : Rat) / 320000000), D2 := ((7404599 : Rat) / 160000000), D3 := ((2092996205357142837 : Rat) / 10000000000000000000), D4 := ((2728343187499999 : Rat) / 10000000000000000), LB := ((2821094695146123 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((811134601 : Rat) / 320000000), R := ((511587 : Rat) / 200000), D0 := ((511587 : Rat) / 200000), D1 := ((7404599 : Rat) / 10000000), D2 := ((7404599 : Rat) / 320000000), D3 := ((1861602486607142837 : Rat) / 10000000000000000000), D4 := ((2496949468749999 : Rat) / 10000000000000000), LB := ((509753889554241 : Rat) / 25000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((511587 : Rat) / 200000), R := ((410899808767857142837 : Rat) / 160000000000000000000), D0 := ((410899808767857142837 : Rat) / 160000000000000000000), D1 := ((120103792767857142837 : Rat) / 160000000000000000000), D2 := ((1630208767857142837 : Rat) / 160000000000000000000), D3 := ((1630208767857142837 : Rat) / 10000000000000000000), D4 := ((2265555749999999 : Rat) / 10000000000000000), LB := ((4995776175797051 : Rat) / 200000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((410899808767857142837 : Rat) / 160000000000000000000), R := ((206265008767857142837 : Rat) / 80000000000000000000), D0 := ((206265008767857142837 : Rat) / 80000000000000000000), D1 := ((60867000767857142837 : Rat) / 80000000000000000000), D2 := ((1630208767857142837 : Rat) / 80000000000000000000), D3 := ((4890626303571428511 : Rat) / 32000000000000000000), D4 := ((34618683232142841163 : Rat) / 160000000000000000000), LB := ((3247132454577889 : Rat) / 250000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((206265008767857142837 : Rat) / 80000000000000000000), R := ((414160226303571428511 : Rat) / 160000000000000000000), D0 := ((414160226303571428511 : Rat) / 160000000000000000000), D1 := ((123364210303571428511 : Rat) / 160000000000000000000), D2 := ((4890626303571428511 : Rat) / 160000000000000000000), D3 := ((11411461374999999859 : Rat) / 80000000000000000000), D4 := ((16494237232142849163 : Rat) / 80000000000000000000), LB := ((23292934713945723 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((414160226303571428511 : Rat) / 160000000000000000000), R := ((829950661374999999859 : Rat) / 320000000000000000000), D0 := ((829950661374999999859 : Rat) / 320000000000000000000), D1 := ((248358629374999999859 : Rat) / 320000000000000000000), D2 := ((11411461374999999859 : Rat) / 320000000000000000000), D3 := ((21192713982142856881 : Rat) / 160000000000000000000), D4 := ((31358265696428555489 : Rat) / 160000000000000000000), LB := ((132961521187559 : Rat) / 20000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((829950661374999999859 : Rat) / 320000000000000000000), R := ((103947608767857142837 : Rat) / 40000000000000000000), D0 := ((103947608767857142837 : Rat) / 40000000000000000000), D1 := ((31248604767857142837 : Rat) / 40000000000000000000), D2 := ((1630208767857142837 : Rat) / 40000000000000000000), D3 := ((1630208767857142837 : Rat) / 12800000000000000000), D4 := ((61086322624999968141 : Rat) / 320000000000000000000), LB := ((5133802632916129 : Rat) / 2000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((103947608767857142837 : Rat) / 40000000000000000000), R := ((1664791949053571428229 : Rat) / 640000000000000000000), D0 := ((1664791949053571428229 : Rat) / 640000000000000000000), D1 := ((501607885053571428229 : Rat) / 640000000000000000000), D2 := ((27713549053571428229 : Rat) / 640000000000000000000), D3 := ((4890626303571428511 : Rat) / 40000000000000000000), D4 := ((7432014232142853163 : Rat) / 40000000000000000000), LB := ((11249718966018063 : Rat) / 2000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1664791949053571428229 : Rat) / 640000000000000000000), R := ((833211078910714285533 : Rat) / 320000000000000000000), D0 := ((833211078910714285533 : Rat) / 320000000000000000000), D1 := ((251619046910714285533 : Rat) / 320000000000000000000), D2 := ((14671878910714285533 : Rat) / 320000000000000000000), D3 := ((76619812089285713339 : Rat) / 640000000000000000000), D4 := ((117282018946428507771 : Rat) / 640000000000000000000), LB := ((3949213927140011 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((833211078910714285533 : Rat) / 320000000000000000000), R := ((1668052366589285713903 : Rat) / 640000000000000000000), D0 := ((1668052366589285713903 : Rat) / 640000000000000000000), D1 := ((504868302589285713903 : Rat) / 640000000000000000000), D2 := ((30973966589285713903 : Rat) / 640000000000000000000), D3 := ((37494801660714285251 : Rat) / 320000000000000000000), D4 := ((57825905089285682467 : Rat) / 320000000000000000000), LB := ((5978793915273617 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1668052366589285713903 : Rat) / 640000000000000000000), R := ((83484128767857142837 : Rat) / 32000000000000000000), D0 := ((83484128767857142837 : Rat) / 32000000000000000000), D1 := ((25324925567857142837 : Rat) / 32000000000000000000), D2 := ((1630208767857142837 : Rat) / 32000000000000000000), D3 := ((14671878910714285533 : Rat) / 128000000000000000000), D4 := ((114021601410714222097 : Rat) / 640000000000000000000), LB := ((9556930367013439 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((83484128767857142837 : Rat) / 32000000000000000000), R := ((3340995359482142856317 : Rat) / 1280000000000000000000), D0 := ((3340995359482142856317 : Rat) / 1280000000000000000000), D1 := ((1014627231482142856317 : Rat) / 1280000000000000000000), D2 := ((66838559482142856317 : Rat) / 1280000000000000000000), D3 := ((17932296446428571207 : Rat) / 160000000000000000000), D4 := ((5619569632142853963 : Rat) / 32000000000000000000), LB := ((2969091075272573 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3340995359482142856317 : Rat) / 1280000000000000000000), R := ((1671312784124999999577 : Rat) / 640000000000000000000), D0 := ((1671312784124999999577 : Rat) / 640000000000000000000), D1 := ((508128720124999999577 : Rat) / 640000000000000000000), D2 := ((34234384124999999577 : Rat) / 640000000000000000000), D3 := ((141828162803571426819 : Rat) / 1280000000000000000000), D4 := ((223152576517857015683 : Rat) / 1280000000000000000000), LB := ((23580796656434977 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1671312784124999999577 : Rat) / 640000000000000000000), R := ((3344255777017857141991 : Rat) / 1280000000000000000000), D0 := ((3344255777017857141991 : Rat) / 1280000000000000000000), D1 := ((1017887649017857141991 : Rat) / 1280000000000000000000), D2 := ((70098977017857141991 : Rat) / 1280000000000000000000), D3 := ((70098977017857141991 : Rat) / 640000000000000000000), D4 := ((110761183874999936423 : Rat) / 640000000000000000000), LB := ((2225370231941047 : Rat) / 1250000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3344255777017857141991 : Rat) / 1280000000000000000000), R := ((836471496446428571207 : Rat) / 320000000000000000000), D0 := ((836471496446428571207 : Rat) / 320000000000000000000), D1 := ((254879464446428571207 : Rat) / 320000000000000000000), D2 := ((17932296446428571207 : Rat) / 320000000000000000000), D3 := ((27713549053571428229 : Rat) / 256000000000000000000), D4 := ((219892158982142730009 : Rat) / 1280000000000000000000), LB := ((193179341279031 : Rat) / 156250000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((836471496446428571207 : Rat) / 320000000000000000000), R := ((669503238910714285533 : Rat) / 256000000000000000000), D0 := ((669503238910714285533 : Rat) / 256000000000000000000), D1 := ((204229613310714285533 : Rat) / 256000000000000000000), D2 := ((14671878910714285533 : Rat) / 256000000000000000000), D3 := ((34234384124999999577 : Rat) / 320000000000000000000), D4 := ((54565487553571396793 : Rat) / 320000000000000000000), LB := ((7268627797025751 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((669503238910714285533 : Rat) / 256000000000000000000), R := ((1674573201660714285251 : Rat) / 640000000000000000000), D0 := ((1674573201660714285251 : Rat) / 640000000000000000000), D1 := ((511389137660714285251 : Rat) / 640000000000000000000), D2 := ((37494801660714285251 : Rat) / 640000000000000000000), D3 := ((135307327732142855471 : Rat) / 1280000000000000000000), D4 := ((43326348289285688867 : Rat) / 256000000000000000000), LB := ((2524916397700361 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1674573201660714285251 : Rat) / 640000000000000000000), R := ((6699923015410714283841 : Rat) / 2560000000000000000000), D0 := ((6699923015410714283841 : Rat) / 2560000000000000000000), D1 := ((2047186759410714283841 : Rat) / 2560000000000000000000), D2 := ((151609415410714283841 : Rat) / 2560000000000000000000), D3 := ((66838559482142856317 : Rat) / 640000000000000000000), D4 := ((107500766339285650749 : Rat) / 640000000000000000000), LB := ((73150961366171 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6699923015410714283841 : Rat) / 2560000000000000000000), R := ((3350776612089285713339 : Rat) / 1280000000000000000000), D0 := ((3350776612089285713339 : Rat) / 1280000000000000000000), D1 := ((1024408484089285713339 : Rat) / 1280000000000000000000), D2 := ((76619812089285713339 : Rat) / 1280000000000000000000), D3 := ((265724029160714282431 : Rat) / 2560000000000000000000), D4 := ((428372856589285460159 : Rat) / 2560000000000000000000), LB := ((6280937730458319 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3350776612089285713339 : Rat) / 1280000000000000000000), R := ((1340636686589285713903 : Rat) / 512000000000000000000), D0 := ((1340636686589285713903 : Rat) / 512000000000000000000), D1 := ((410089435389285713903 : Rat) / 512000000000000000000), D2 := ((30973966589285713903 : Rat) / 512000000000000000000), D3 := ((132046910196428569797 : Rat) / 1280000000000000000000), D4 := ((213371323910714158661 : Rat) / 1280000000000000000000), LB := ((2117136482582771 : Rat) / 2000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1340636686589285713903 : Rat) / 512000000000000000000), R := ((209525426303571428511 : Rat) / 80000000000000000000), D0 := ((209525426303571428511 : Rat) / 80000000000000000000), D1 := ((64127418303571428511 : Rat) / 80000000000000000000), D2 := ((4890626303571428511 : Rat) / 80000000000000000000), D3 := ((262463611624999996757 : Rat) / 2560000000000000000000), D4 := ((85022487810714234897 : Rat) / 512000000000000000000), LB := ((43512626943569 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((209525426303571428511 : Rat) / 80000000000000000000), R := ((6706443850482142855189 : Rat) / 2560000000000000000000), D0 := ((6706443850482142855189 : Rat) / 2560000000000000000000), D1 := ((2053707594482142855189 : Rat) / 2560000000000000000000), D2 := ((158130250482142855189 : Rat) / 2560000000000000000000), D3 := ((1630208767857142837 : Rat) / 16000000000000000000), D4 := ((13233819696428563489 : Rat) / 80000000000000000000), LB := ((6913333328803783 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6706443850482142855189 : Rat) / 2560000000000000000000), R := ((3354037029624999999013 : Rat) / 1280000000000000000000), D0 := ((3354037029624999999013 : Rat) / 1280000000000000000000), D1 := ((1027668901624999999013 : Rat) / 1280000000000000000000), D2 := ((79880229624999999013 : Rat) / 1280000000000000000000), D3 := ((259203194089285711083 : Rat) / 2560000000000000000000), D4 := ((421852021517856888811 : Rat) / 2560000000000000000000), LB := ((326190766262429 : Rat) / 625000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3354037029624999999013 : Rat) / 1280000000000000000000), R := ((6709704268017857140863 : Rat) / 2560000000000000000000), D0 := ((6709704268017857140863 : Rat) / 2560000000000000000000), D1 := ((2056968012017857140863 : Rat) / 2560000000000000000000), D2 := ((161390668017857140863 : Rat) / 2560000000000000000000), D3 := ((128786492660714284123 : Rat) / 1280000000000000000000), D4 := ((210110906374999872987 : Rat) / 1280000000000000000000), LB := ((7241291428889407 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6709704268017857140863 : Rat) / 2560000000000000000000), R := ((67113344767857142837 : Rat) / 25600000000000000000), D0 := ((67113344767857142837 : Rat) / 25600000000000000000), D1 := ((20585982207857142837 : Rat) / 25600000000000000000), D2 := ((1630208767857142837 : Rat) / 25600000000000000000), D3 := ((255942776553571425409 : Rat) / 2560000000000000000000), D4 := ((418591603982142603137 : Rat) / 2560000000000000000000), LB := ((21190951587193863 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((67113344767857142837 : Rat) / 25600000000000000000), R := ((6712964685553571426537 : Rat) / 2560000000000000000000), D0 := ((6712964685553571426537 : Rat) / 2560000000000000000000), D1 := ((2060228429553571426537 : Rat) / 2560000000000000000000), D2 := ((164651085553571426537 : Rat) / 2560000000000000000000), D3 := ((63578141946428570643 : Rat) / 640000000000000000000), D4 := ((4169613952142854603 : Rat) / 25600000000000000000), LB := ((7154004404719139 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6712964685553571426537 : Rat) / 2560000000000000000000), R := ((13427559579874999995911 : Rat) / 5120000000000000000000), D0 := ((13427559579874999995911 : Rat) / 5120000000000000000000), D1 := ((4122087067874999995911 : Rat) / 5120000000000000000000), D2 := ((330932379874999995911 : Rat) / 5120000000000000000000), D3 := ((50536471803571427947 : Rat) / 512000000000000000000), D4 := ((415331186446428317463 : Rat) / 2560000000000000000000), LB := ((3803920155695667 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13427559579874999995911 : Rat) / 5120000000000000000000), R := ((3357297447160714284687 : Rat) / 1280000000000000000000), D0 := ((3357297447160714284687 : Rat) / 1280000000000000000000), D1 := ((1030929319160714284687 : Rat) / 1280000000000000000000), D2 := ((83140647160714284687 : Rat) / 1280000000000000000000), D3 := ((503734509267857136633 : Rat) / 5120000000000000000000), D4 := ((829032164124999492089 : Rat) / 5120000000000000000000), LB := ((6989924294153183 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3357297447160714284687 : Rat) / 1280000000000000000000), R := ((2686163999482142856317 : Rat) / 1024000000000000000000), D0 := ((2686163999482142856317 : Rat) / 1024000000000000000000), D1 := ((825069497082142856317 : Rat) / 1024000000000000000000), D2 := ((66838559482142856317 : Rat) / 1024000000000000000000), D3 := ((125526075124999998449 : Rat) / 1280000000000000000000), D4 := ((206850488839285587313 : Rat) / 1280000000000000000000), LB := ((6397119909390403 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2686163999482142856317 : Rat) / 1024000000000000000000), R := ((6716225103089285712211 : Rat) / 2560000000000000000000), D0 := ((6716225103089285712211 : Rat) / 2560000000000000000000), D1 := ((2063488847089285712211 : Rat) / 2560000000000000000000), D2 := ((167911503089285712211 : Rat) / 2560000000000000000000), D3 := ((500474091732142850959 : Rat) / 5120000000000000000000), D4 := ((165154349317857041283 : Rat) / 1024000000000000000000), LB := ((5829560002001133 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6716225103089285712211 : Rat) / 2560000000000000000000), R := ((13434080414946428567259 : Rat) / 5120000000000000000000), D0 := ((13434080414946428567259 : Rat) / 5120000000000000000000), D1 := ((4128607902946428567259 : Rat) / 5120000000000000000000), D2 := ((337453214946428567259 : Rat) / 5120000000000000000000), D3 := ((249421941482142854061 : Rat) / 2560000000000000000000), D4 := ((412070768910714031789 : Rat) / 2560000000000000000000), LB := ((5287378685804589 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13434080414946428567259 : Rat) / 5120000000000000000000), R := ((839731913982142856881 : Rat) / 320000000000000000000), D0 := ((839731913982142856881 : Rat) / 320000000000000000000), D1 := ((258139881982142856881 : Rat) / 320000000000000000000), D2 := ((21192713982142856881 : Rat) / 320000000000000000000), D3 := ((99442734839285713057 : Rat) / 1024000000000000000000), D4 := ((822511329053570920741 : Rat) / 5120000000000000000000), LB := ((23853556798508757 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((839731913982142856881 : Rat) / 320000000000000000000), R := ((13437340832482142852933 : Rat) / 5120000000000000000000), D0 := ((13437340832482142852933 : Rat) / 5120000000000000000000), D1 := ((4131868320482142852933 : Rat) / 5120000000000000000000), D2 := ((340713632482142852933 : Rat) / 5120000000000000000000), D3 := ((30973966589285713903 : Rat) / 320000000000000000000), D4 := ((51305070017857111119 : Rat) / 320000000000000000000), LB := ((42796947240233973 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13437340832482142852933 : Rat) / 5120000000000000000000), R := ((1343897104124999999577 : Rat) / 512000000000000000000), D0 := ((1343897104124999999577 : Rat) / 512000000000000000000), D1 := ((413349852924999999577 : Rat) / 512000000000000000000), D2 := ((34234384124999999577 : Rat) / 512000000000000000000), D3 := ((493953256660714279611 : Rat) / 5120000000000000000000), D4 := ((819250911517856635067 : Rat) / 5120000000000000000000), LB := ((3814466797258387 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1343897104124999999577 : Rat) / 512000000000000000000), R := ((13440601250017857138607 : Rat) / 5120000000000000000000), D0 := ((13440601250017857138607 : Rat) / 5120000000000000000000), D1 := ((4135128738017857138607 : Rat) / 5120000000000000000000), D2 := ((343974050017857138607 : Rat) / 5120000000000000000000), D3 := ((246161523946428568387 : Rat) / 2560000000000000000000), D4 := ((81762070274999949223 : Rat) / 512000000000000000000), LB := ((3375166932894913 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13440601250017857138607 : Rat) / 5120000000000000000000), R := ((3360557864696428570361 : Rat) / 1280000000000000000000), D0 := ((3360557864696428570361 : Rat) / 1280000000000000000000), D1 := ((1034189736696428570361 : Rat) / 1280000000000000000000), D2 := ((86401064696428570361 : Rat) / 1280000000000000000000), D3 := ((490692839124999993937 : Rat) / 5120000000000000000000), D4 := ((815990493982142349393 : Rat) / 5120000000000000000000), LB := ((740483959177779 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3360557864696428570361 : Rat) / 1280000000000000000000), R := ((13443861667553571424281 : Rat) / 5120000000000000000000), D0 := ((13443861667553571424281 : Rat) / 5120000000000000000000), D1 := ((4138389155553571424281 : Rat) / 5120000000000000000000), D2 := ((347234467553571424281 : Rat) / 5120000000000000000000), D3 := ((4890626303571428511 : Rat) / 51200000000000000000), D4 := ((203590071303571301639 : Rat) / 1280000000000000000000), LB := ((643728896061943 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13443861667553571424281 : Rat) / 5120000000000000000000), R := ((6722745938160714283559 : Rat) / 2560000000000000000000), D0 := ((6722745938160714283559 : Rat) / 2560000000000000000000), D1 := ((2070009682160714283559 : Rat) / 2560000000000000000000), D2 := ((174432338160714283559 : Rat) / 2560000000000000000000), D3 := ((487432421589285708263 : Rat) / 5120000000000000000000), D4 := ((812730076446428063719 : Rat) / 5120000000000000000000), LB := ((4428499277048803 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6722745938160714283559 : Rat) / 2560000000000000000000), R := ((2689424417017857141991 : Rat) / 1024000000000000000000), D0 := ((2689424417017857141991 : Rat) / 1024000000000000000000), D1 := ((828329914617857141991 : Rat) / 1024000000000000000000), D2 := ((70098977017857141991 : Rat) / 1024000000000000000000), D3 := ((242901106410714282713 : Rat) / 2560000000000000000000), D4 := ((405549933839285460441 : Rat) / 2560000000000000000000), LB := ((3760165736384491 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2689424417017857141991 : Rat) / 1024000000000000000000), R := ((1681094036732142856599 : Rat) / 640000000000000000000), D0 := ((1681094036732142856599 : Rat) / 640000000000000000000), D1 := ((517909972732142856599 : Rat) / 640000000000000000000), D2 := ((44015636732142856599 : Rat) / 640000000000000000000), D3 := ((484172004053571422589 : Rat) / 5120000000000000000000), D4 := ((161893931782142755609 : Rat) / 1024000000000000000000), LB := ((1965701957303001 : Rat) / 12500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1681094036732142856599 : Rat) / 640000000000000000000), R := ((13450382502624999995629 : Rat) / 5120000000000000000000), D0 := ((13450382502624999995629 : Rat) / 5120000000000000000000), D1 := ((4144909990624999995629 : Rat) / 5120000000000000000000), D2 := ((353755302624999995629 : Rat) / 5120000000000000000000), D3 := ((60317724410714284969 : Rat) / 640000000000000000000), D4 := ((100979931267857079401 : Rat) / 640000000000000000000), LB := ((1291833466718073 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13450382502624999995629 : Rat) / 5120000000000000000000), R := ((6726006355696428569233 : Rat) / 2560000000000000000000), D0 := ((6726006355696428569233 : Rat) / 2560000000000000000000), D1 := ((2073270099696428569233 : Rat) / 2560000000000000000000), D2 := ((177692755696428569233 : Rat) / 2560000000000000000000), D3 := ((96182317303571427383 : Rat) / 1024000000000000000000), D4 := ((806209241374999492371 : Rat) / 5120000000000000000000), LB := ((2076095535339939 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6726006355696428569233 : Rat) / 2560000000000000000000), R := ((13453642920160714281303 : Rat) / 5120000000000000000000), D0 := ((13453642920160714281303 : Rat) / 5120000000000000000000), D1 := ((4148170408160714281303 : Rat) / 5120000000000000000000), D2 := ((357015720160714281303 : Rat) / 5120000000000000000000), D3 := ((239640688874999997039 : Rat) / 2560000000000000000000), D4 := ((402289516303571174767 : Rat) / 2560000000000000000000), LB := ((81135514647529 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13453642920160714281303 : Rat) / 5120000000000000000000), R := ((672763656446428571207 : Rat) / 256000000000000000000), D0 := ((672763656446428571207 : Rat) / 256000000000000000000), D1 := ((207490030846428571207 : Rat) / 256000000000000000000), D2 := ((17932296446428571207 : Rat) / 256000000000000000000), D3 := ((477651168982142851241 : Rat) / 5120000000000000000000), D4 := ((802948823839285206697 : Rat) / 5120000000000000000000), LB := ((1529769453674501 : Rat) / 25000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((672763656446428571207 : Rat) / 256000000000000000000), R := ((13456903337696428566977 : Rat) / 5120000000000000000000), D0 := ((13456903337696428566977 : Rat) / 5120000000000000000000), D1 := ((4151430825696428566977 : Rat) / 5120000000000000000000), D2 := ((360276137696428566977 : Rat) / 5120000000000000000000), D3 := ((119005240053571427101 : Rat) / 1280000000000000000000), D4 := ((40065930753571403193 : Rat) / 256000000000000000000), LB := ((4398593714780019 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13456903337696428566977 : Rat) / 5120000000000000000000), R := ((6729266773232142854907 : Rat) / 2560000000000000000000), D0 := ((6729266773232142854907 : Rat) / 2560000000000000000000), D1 := ((2076530517232142854907 : Rat) / 2560000000000000000000), D2 := ((180953173232142854907 : Rat) / 2560000000000000000000), D3 := ((474390751446428565567 : Rat) / 5120000000000000000000), D4 := ((799688406303570921023 : Rat) / 5120000000000000000000), LB := ((14768257806010987 : Rat) / 500000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6729266773232142854907 : Rat) / 2560000000000000000000), R := ((13460163755232142852651 : Rat) / 5120000000000000000000), D0 := ((13460163755232142852651 : Rat) / 5120000000000000000000), D1 := ((4154691243232142852651 : Rat) / 5120000000000000000000), D2 := ((363536555232142852651 : Rat) / 5120000000000000000000), D3 := ((47276054267857142273 : Rat) / 512000000000000000000), D4 := ((399029098767856889093 : Rat) / 2560000000000000000000), LB := ((8929096823165339 : Rat) / 500000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13460163755232142852651 : Rat) / 5120000000000000000000), R := ((420681061374999999859 : Rat) / 160000000000000000000), D0 := ((420681061374999999859 : Rat) / 160000000000000000000), D1 := ((129885045374999999859 : Rat) / 160000000000000000000), D2 := ((11411461374999999859 : Rat) / 160000000000000000000), D3 := ((471130333910714279893 : Rat) / 5120000000000000000000), D4 := ((796427988767856635349 : Rat) / 5120000000000000000000), LB := ((8966809598526249 : Rat) / 1000000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((420681061374999999859 : Rat) / 160000000000000000000), R := ((538536966910714285533 : Rat) / 204800000000000000000), D0 := ((538536966910714285533 : Rat) / 204800000000000000000), D1 := ((166318066430714285533 : Rat) / 204800000000000000000), D2 := ((14671878910714285533 : Rat) / 204800000000000000000), D3 := ((14671878910714285533 : Rat) / 160000000000000000000), D4 := ((24837430624999984141 : Rat) / 160000000000000000000), LB := ((28783621938699433 : Rat) / 10000000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((538536966910714285533 : Rat) / 204800000000000000000), R := ((26928478554303571419487 : Rat) / 10240000000000000000000), D0 := ((26928478554303571419487 : Rat) / 10240000000000000000000), D1 := ((8317533530303571419487 : Rat) / 10240000000000000000000), D2 := ((735224154303571419487 : Rat) / 10240000000000000000000), D3 := ((467869916374999994219 : Rat) / 5120000000000000000000), D4 := ((31726702849285693987 : Rat) / 204800000000000000000), LB := ((4062634455367087 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((26928478554303571419487 : Rat) / 10240000000000000000000), R := ((6732527190767857140581 : Rat) / 2560000000000000000000), D0 := ((6732527190767857140581 : Rat) / 2560000000000000000000), D1 := ((2079790934767857140581 : Rat) / 2560000000000000000000), D2 := ((184213590767857140581 : Rat) / 2560000000000000000000), D3 := ((934109623982142845601 : Rat) / 10240000000000000000000), D4 := ((1584704933696427556513 : Rat) / 10240000000000000000000), LB := ((4056195454407441 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6732527190767857140581 : Rat) / 2560000000000000000000), R := ((26931738971839285705161 : Rat) / 10240000000000000000000), D0 := ((26931738971839285705161 : Rat) / 10240000000000000000000), D1 := ((8320793947839285705161 : Rat) / 10240000000000000000000), D2 := ((738484571839285705161 : Rat) / 10240000000000000000000), D3 := ((233119853803571425691 : Rat) / 2560000000000000000000), D4 := ((395768681232142603419 : Rat) / 2560000000000000000000), LB := ((10142164552307681 : Rat) / 25000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((26931738971839285705161 : Rat) / 10240000000000000000000), R := ((13466684590303571423999 : Rat) / 5120000000000000000000), D0 := ((13466684590303571423999 : Rat) / 5120000000000000000000), D1 := ((4161212078303571423999 : Rat) / 5120000000000000000000), D2 := ((370057390303571423999 : Rat) / 5120000000000000000000), D3 := ((930849206446428559927 : Rat) / 10240000000000000000000), D4 := ((1581444516160713270839 : Rat) / 10240000000000000000000), LB := ((4064666223423663 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13466684590303571423999 : Rat) / 5120000000000000000000), R := ((3367078699767857141709 : Rat) / 1280000000000000000000), D0 := ((3367078699767857141709 : Rat) / 1280000000000000000000), D1 := ((1040710571767857141709 : Rat) / 1280000000000000000000), D2 := ((92921899767857141709 : Rat) / 1280000000000000000000), D3 := ((92921899767857141709 : Rat) / 1024000000000000000000), D4 := ((789907153696428064001 : Rat) / 5120000000000000000000), LB := ((3982696463525337 : Rat) / 2500000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3367078699767857141709 : Rat) / 1280000000000000000000), R := ((13469945007839285709673 : Rat) / 5120000000000000000000), D0 := ((13469945007839285709673 : Rat) / 5120000000000000000000), D1 := ((4164472495839285709673 : Rat) / 5120000000000000000000), D2 := ((373317807839285709673 : Rat) / 5120000000000000000000), D3 := ((115744822517857141427 : Rat) / 1280000000000000000000), D4 := ((197069236232142730291 : Rat) / 1280000000000000000000), LB := ((343982465418613 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13469945007839285709673 : Rat) / 5120000000000000000000), R := ((1347157521660714285251 : Rat) / 512000000000000000000), D0 := ((1347157521660714285251 : Rat) / 512000000000000000000), D1 := ((416610270460714285251 : Rat) / 512000000000000000000), D2 := ((37494801660714285251 : Rat) / 512000000000000000000), D3 := ((461349081303571422871 : Rat) / 5120000000000000000000), D4 := ((786646736160713778327 : Rat) / 5120000000000000000000), LB := ((3762908314462743 : Rat) / 250000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1347157521660714285251 : Rat) / 512000000000000000000), R := ((13473205425374999995347 : Rat) / 5120000000000000000000), D0 := ((13473205425374999995347 : Rat) / 5120000000000000000000), D1 := ((4167732913374999995347 : Rat) / 5120000000000000000000), D2 := ((376578225374999995347 : Rat) / 5120000000000000000000), D3 := ((229859436267857140017 : Rat) / 2560000000000000000000), D4 := ((78501652739285663549 : Rat) / 512000000000000000000), LB := ((2612603834858951 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13473205425374999995347 : Rat) / 5120000000000000000000), R := ((1684354454267857142273 : Rat) / 640000000000000000000), D0 := ((1684354454267857142273 : Rat) / 640000000000000000000), D1 := ((521170390267857142273 : Rat) / 640000000000000000000), D2 := ((47276054267857142273 : Rat) / 640000000000000000000), D3 := ((458088663767857137197 : Rat) / 5120000000000000000000), D4 := ((783386318624999492653 : Rat) / 5120000000000000000000), LB := ((40120048875935677 : Rat) / 1000000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1684354454267857142273 : Rat) / 640000000000000000000), R := ((13476465842910714281021 : Rat) / 5120000000000000000000), D0 := ((13476465842910714281021 : Rat) / 5120000000000000000000), D1 := ((4170993330910714281021 : Rat) / 5120000000000000000000), D2 := ((379838642910714281021 : Rat) / 5120000000000000000000), D3 := ((11411461374999999859 : Rat) / 128000000000000000000), D4 := ((97719513732142793727 : Rat) / 640000000000000000000), LB := ((5705102797531891 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13476465842910714281021 : Rat) / 5120000000000000000000), R := ((6739048025839285711929 : Rat) / 2560000000000000000000), D0 := ((6739048025839285711929 : Rat) / 2560000000000000000000), D1 := ((2086311769839285711929 : Rat) / 2560000000000000000000), D2 := ((190734425839285711929 : Rat) / 2560000000000000000000), D3 := ((454828246232142851523 : Rat) / 5120000000000000000000), D4 := ((780125901089285206979 : Rat) / 5120000000000000000000), LB := ((120213312666817 : Rat) / 1562500000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6739048025839285711929 : Rat) / 2560000000000000000000), R := ((2695945252089285713339 : Rat) / 1024000000000000000000), D0 := ((2695945252089285713339 : Rat) / 1024000000000000000000), D1 := ((834850749689285713339 : Rat) / 1024000000000000000000), D2 := ((76619812089285713339 : Rat) / 1024000000000000000000), D3 := ((226599018732142854343 : Rat) / 2560000000000000000000), D4 := ((389247846160714032071 : Rat) / 2560000000000000000000), LB := ((997942535992391 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2695945252089285713339 : Rat) / 1024000000000000000000), R := ((3370339117303571427383 : Rat) / 1280000000000000000000), D0 := ((3370339117303571427383 : Rat) / 1280000000000000000000), D1 := ((1043970989303571427383 : Rat) / 1280000000000000000000), D2 := ((96182317303571427383 : Rat) / 1280000000000000000000), D3 := ((451567828696428565849 : Rat) / 5120000000000000000000), D4 := ((155373096710714184261 : Rat) / 1024000000000000000000), LB := ((3141053580568709 : Rat) / 25000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3370339117303571427383 : Rat) / 1280000000000000000000), R := ((13482986677982142852369 : Rat) / 5120000000000000000000), D0 := ((13482986677982142852369 : Rat) / 5120000000000000000000), D1 := ((4177514165982142852369 : Rat) / 5120000000000000000000), D2 := ((386359477982142852369 : Rat) / 5120000000000000000000), D3 := ((112484404982142855753 : Rat) / 1280000000000000000000), D4 := ((193808818696428444617 : Rat) / 1280000000000000000000), LB := ((308996585653587 : Rat) / 2000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13482986677982142852369 : Rat) / 5120000000000000000000), R := ((6742308443374999997603 : Rat) / 2560000000000000000000), D0 := ((6742308443374999997603 : Rat) / 2560000000000000000000), D1 := ((2089572187374999997603 : Rat) / 2560000000000000000000), D2 := ((193994843374999997603 : Rat) / 2560000000000000000000), D3 := ((17932296446428571207 : Rat) / 204800000000000000000), D4 := ((773605066017856635631 : Rat) / 5120000000000000000000), LB := ((931904990023047 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6742308443374999997603 : Rat) / 2560000000000000000000), R := ((13486247095517857138043 : Rat) / 5120000000000000000000), D0 := ((13486247095517857138043 : Rat) / 5120000000000000000000), D1 := ((4180774583517857138043 : Rat) / 5120000000000000000000), D2 := ((389619895517857138043 : Rat) / 5120000000000000000000), D3 := ((223338601196428568669 : Rat) / 2560000000000000000000), D4 := ((385987428624999746397 : Rat) / 2560000000000000000000), LB := ((5532718720611951 : Rat) / 25000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13486247095517857138043 : Rat) / 5120000000000000000000), R := ((168598466303571428511 : Rat) / 64000000000000000000), D0 := ((168598466303571428511 : Rat) / 64000000000000000000), D1 := ((52280059903571428511 : Rat) / 64000000000000000000), D2 := ((4890626303571428511 : Rat) / 64000000000000000000), D3 := ((445046993624999994501 : Rat) / 5120000000000000000000), D4 := ((770344648482142349957 : Rat) / 5120000000000000000000), LB := ((2593002325962379 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((168598466303571428511 : Rat) / 64000000000000000000), R := ((13489507513053571423717 : Rat) / 5120000000000000000000), D0 := ((13489507513053571423717 : Rat) / 5120000000000000000000), D1 := ((4184035001053571423717 : Rat) / 5120000000000000000000), D2 := ((392880313053571423717 : Rat) / 5120000000000000000000), D3 := ((27713549053571428229 : Rat) / 320000000000000000000), D4 := ((9608930496428565089 : Rat) / 64000000000000000000), LB := ((30037433669530267 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13489507513053571423717 : Rat) / 5120000000000000000000), R := ((6745568860910714283277 : Rat) / 2560000000000000000000), D0 := ((6745568860910714283277 : Rat) / 2560000000000000000000), D1 := ((2092832604910714283277 : Rat) / 2560000000000000000000), D2 := ((197255260910714283277 : Rat) / 2560000000000000000000), D3 := ((441786576089285708827 : Rat) / 5120000000000000000000), D4 := ((767084230946428064283 : Rat) / 5120000000000000000000), LB := ((34455015143539103 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6745568860910714283277 : Rat) / 2560000000000000000000), R := ((13492767930589285709391 : Rat) / 5120000000000000000000), D0 := ((13492767930589285709391 : Rat) / 5120000000000000000000), D1 := ((4187295418589285709391 : Rat) / 5120000000000000000000), D2 := ((396140730589285709391 : Rat) / 5120000000000000000000), D3 := ((44015636732142856599 : Rat) / 512000000000000000000), D4 := ((382727011089285460723 : Rat) / 2560000000000000000000), LB := ((9796174324859519 : Rat) / 25000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13492767930589285709391 : Rat) / 5120000000000000000000), R := ((3373599534839285713057 : Rat) / 1280000000000000000000), D0 := ((3373599534839285713057 : Rat) / 1280000000000000000000), D1 := ((1047231406839285713057 : Rat) / 1280000000000000000000), D2 := ((99442734839285713057 : Rat) / 1280000000000000000000), D3 := ((438526158553571423153 : Rat) / 5120000000000000000000), D4 := ((763823813410713778609 : Rat) / 5120000000000000000000), LB := ((44228430639287053 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3373599534839285713057 : Rat) / 1280000000000000000000), R := ((2699205669624999999013 : Rat) / 1024000000000000000000), D0 := ((2699205669624999999013 : Rat) / 1024000000000000000000), D1 := ((838111167224999999013 : Rat) / 1024000000000000000000), D2 := ((79880229624999999013 : Rat) / 1024000000000000000000), D3 := ((109223987446428570079 : Rat) / 1280000000000000000000), D4 := ((190548401160714158943 : Rat) / 1280000000000000000000), LB := ((4958818685267263 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2699205669624999999013 : Rat) / 1024000000000000000000), R := ((6748829278446428568951 : Rat) / 2560000000000000000000), D0 := ((6748829278446428568951 : Rat) / 2560000000000000000000), D1 := ((2096093022446428568951 : Rat) / 2560000000000000000000), D2 := ((200515678446428568951 : Rat) / 2560000000000000000000), D3 := ((435265741017857137479 : Rat) / 5120000000000000000000), D4 := ((152112679174999898587 : Rat) / 1024000000000000000000), LB := ((27632979563047 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6748829278446428568951 : Rat) / 2560000000000000000000), R := ((13499288765660714280739 : Rat) / 5120000000000000000000), D0 := ((13499288765660714280739 : Rat) / 5120000000000000000000), D1 := ((4193816253660714280739 : Rat) / 5120000000000000000000), D2 := ((402661565660714280739 : Rat) / 5120000000000000000000), D3 := ((216817766124999997321 : Rat) / 2560000000000000000000), D4 := ((379466593553571175049 : Rat) / 2560000000000000000000), LB := ((1531594061430011 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13499288765660714280739 : Rat) / 5120000000000000000000), R := ((1687614871803571427947 : Rat) / 640000000000000000000), D0 := ((1687614871803571427947 : Rat) / 640000000000000000000), D1 := ((524430807803571427947 : Rat) / 640000000000000000000), D2 := ((50536471803571427947 : Rat) / 640000000000000000000), D3 := ((86401064696428570361 : Rat) / 1024000000000000000000), D4 := ((757302978339285207261 : Rat) / 5120000000000000000000), LB := ((1351672679508753 : Rat) / 2000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1687614871803571427947 : Rat) / 640000000000000000000), R := ((13502549183196428566413 : Rat) / 5120000000000000000000), D0 := ((13502549183196428566413 : Rat) / 5120000000000000000000), D1 := ((4197076671196428566413 : Rat) / 5120000000000000000000), D2 := ((405921983196428566413 : Rat) / 5120000000000000000000), D3 := ((53796889339285713621 : Rat) / 640000000000000000000), D4 := ((94459096196428508053 : Rat) / 640000000000000000000), LB := ((7422763326865589 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((13502549183196428566413 : Rat) / 5120000000000000000000), R := ((54016717567857142837 : Rat) / 20480000000000000000), D0 := ((54016717567857142837 : Rat) / 20480000000000000000), D1 := ((16794827519857142837 : Rat) / 20480000000000000000), D2 := ((1630208767857142837 : Rat) / 20480000000000000000), D3 := ((428744905946428566131 : Rat) / 5120000000000000000000), D4 := ((754042560803570921587 : Rat) / 5120000000000000000000), LB := ((2029946067895333 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((54016717567857142837 : Rat) / 20480000000000000000), R := ((3376859952374999998731 : Rat) / 1280000000000000000000), D0 := ((3376859952374999998731 : Rat) / 1280000000000000000000), D1 := ((1050491824374999998731 : Rat) / 1280000000000000000000), D2 := ((102703152374999998731 : Rat) / 1280000000000000000000), D3 := ((213557348589285711647 : Rat) / 2560000000000000000000), D4 := ((601929881628571023 : Rat) / 4096000000000000000), LB := ((7894790741058699 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3376859952374999998731 : Rat) / 1280000000000000000000), R := ((6755350113517857140299 : Rat) / 2560000000000000000000), D0 := ((6755350113517857140299 : Rat) / 2560000000000000000000), D1 := ((2102613857517857140299 : Rat) / 2560000000000000000000), D2 := ((207036513517857140299 : Rat) / 2560000000000000000000), D3 := ((21192713982142856881 : Rat) / 256000000000000000000), D4 := ((187287983624999873269 : Rat) / 1280000000000000000000), LB := ((5885346332686059 : Rat) / 25000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6755350113517857140299 : Rat) / 2560000000000000000000), R := ((52788908767857142837 : Rat) / 20000000000000000000), D0 := ((52788908767857142837 : Rat) / 20000000000000000000), D1 := ((16439406767857142837 : Rat) / 20000000000000000000), D2 := ((1630208767857142837 : Rat) / 20000000000000000000), D3 := ((210296931053571425973 : Rat) / 2560000000000000000000), D4 := ((372945758482142603701 : Rat) / 2560000000000000000000), LB := ((8105403703487779 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((52788908767857142837 : Rat) / 20000000000000000000), R := ((6758610531053571425973 : Rat) / 2560000000000000000000), D0 := ((6758610531053571425973 : Rat) / 2560000000000000000000), D1 := ((2105874275053571425973 : Rat) / 2560000000000000000000), D2 := ((210296931053571425973 : Rat) / 2560000000000000000000), D3 := ((1630208767857142837 : Rat) / 20000000000000000000), D4 := ((2900902732142855163 : Rat) / 20000000000000000000), LB := ((5886940331263357 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6758610531053571425973 : Rat) / 2560000000000000000000), R := ((676024073982142856881 : Rat) / 256000000000000000000), D0 := ((676024073982142856881 : Rat) / 256000000000000000000), D1 := ((210750448382142856881 : Rat) / 256000000000000000000), D2 := ((21192713982142856881 : Rat) / 256000000000000000000), D3 := ((207036513517857140299 : Rat) / 2560000000000000000000), D4 := ((369685340946428318027 : Rat) / 2560000000000000000000), LB := ((3929332881340841 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((676024073982142856881 : Rat) / 256000000000000000000), R := ((6761870948589285711647 : Rat) / 2560000000000000000000), D0 := ((6761870948589285711647 : Rat) / 2560000000000000000000), D1 := ((2109134692589285711647 : Rat) / 2560000000000000000000), D2 := ((213557348589285711647 : Rat) / 2560000000000000000000), D3 := ((102703152374999998731 : Rat) / 1280000000000000000000), D4 := ((36805513217857117519 : Rat) / 256000000000000000000), LB := ((9969731677153537 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6761870948589285711647 : Rat) / 2560000000000000000000), R := ((1690875289339285713621 : Rat) / 640000000000000000000), D0 := ((1690875289339285713621 : Rat) / 640000000000000000000), D1 := ((527691225339285713621 : Rat) / 640000000000000000000), D2 := ((53796889339285713621 : Rat) / 640000000000000000000), D3 := ((1630208767857142837 : Rat) / 20480000000000000000), D4 := ((366424923410714032353 : Rat) / 2560000000000000000000), LB := ((6111017322588813 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1690875289339285713621 : Rat) / 640000000000000000000), R := ((6765131366124999997321 : Rat) / 2560000000000000000000), D0 := ((6765131366124999997321 : Rat) / 2560000000000000000000), D1 := ((2112395110124999997321 : Rat) / 2560000000000000000000), D2 := ((216817766124999997321 : Rat) / 2560000000000000000000), D3 := ((50536471803571427947 : Rat) / 640000000000000000000), D4 := ((91198678660714222379 : Rat) / 640000000000000000000), LB := ((456797363358177 : Rat) / 312500000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((6765131366124999997321 : Rat) / 2560000000000000000000), R := ((3383380787446428570079 : Rat) / 1280000000000000000000), D0 := ((3383380787446428570079 : Rat) / 1280000000000000000000), D1 := ((1057012659446428570079 : Rat) / 1280000000000000000000), D2 := ((109223987446428570079 : Rat) / 1280000000000000000000), D3 := ((200515678446428568951 : Rat) / 2560000000000000000000), D4 := ((363164505874999746679 : Rat) / 2560000000000000000000), LB := ((17158161379763337 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3383380787446428570079 : Rat) / 1280000000000000000000), R := ((846252749053571428229 : Rat) / 320000000000000000000), D0 := ((846252749053571428229 : Rat) / 320000000000000000000), D1 := ((264660717053571428229 : Rat) / 320000000000000000000), D2 := ((27713549053571428229 : Rat) / 320000000000000000000), D3 := ((99442734839285713057 : Rat) / 1280000000000000000000), D4 := ((180767148553571301921 : Rat) / 1280000000000000000000), LB := ((3834291926386457 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((846252749053571428229 : Rat) / 320000000000000000000), R := ((3386641204982142855753 : Rat) / 1280000000000000000000), D0 := ((3386641204982142855753 : Rat) / 1280000000000000000000), D1 := ((1060273076982142855753 : Rat) / 1280000000000000000000), D2 := ((112484404982142855753 : Rat) / 1280000000000000000000), D3 := ((4890626303571428511 : Rat) / 64000000000000000000), D4 := ((44784234946428539771 : Rat) / 320000000000000000000), LB := ((4841021047086863 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3386641204982142855753 : Rat) / 1280000000000000000000), R := ((338827141374999999859 : Rat) / 128000000000000000000), D0 := ((338827141374999999859 : Rat) / 128000000000000000000), D1 := ((106190328574999999859 : Rat) / 128000000000000000000), D2 := ((11411461374999999859 : Rat) / 128000000000000000000), D3 := ((96182317303571427383 : Rat) / 1280000000000000000000), D4 := ((177506731017857016247 : Rat) / 1280000000000000000000), LB := ((16144180130698849 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((338827141374999999859 : Rat) / 128000000000000000000), R := ((3389901622517857141427 : Rat) / 1280000000000000000000), D0 := ((3389901622517857141427 : Rat) / 1280000000000000000000), D1 := ((1063533494517857141427 : Rat) / 1280000000000000000000), D2 := ((115744822517857141427 : Rat) / 1280000000000000000000), D3 := ((47276054267857142273 : Rat) / 640000000000000000000), D4 := ((17587652224999987341 : Rat) / 128000000000000000000), LB := ((929553725706167 : Rat) / 400000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3389901622517857141427 : Rat) / 1280000000000000000000), R := ((423941478910714285533 : Rat) / 160000000000000000000), D0 := ((423941478910714285533 : Rat) / 160000000000000000000), D1 := ((133145462910714285533 : Rat) / 160000000000000000000), D2 := ((14671878910714285533 : Rat) / 160000000000000000000), D3 := ((92921899767857141709 : Rat) / 1280000000000000000000), D4 := ((174246313482142730573 : Rat) / 1280000000000000000000), LB := ((3098508698449187 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((423941478910714285533 : Rat) / 160000000000000000000), R := ((1697396124410714284969 : Rat) / 640000000000000000000), D0 := ((1697396124410714284969 : Rat) / 640000000000000000000), D1 := ((534212060410714284969 : Rat) / 640000000000000000000), D2 := ((60317724410714284969 : Rat) / 640000000000000000000), D3 := ((11411461374999999859 : Rat) / 160000000000000000000), D4 := ((21577013089285698467 : Rat) / 160000000000000000000), LB := ((381584971639759 : Rat) / 500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1697396124410714284969 : Rat) / 640000000000000000000), R := ((849513166589285713903 : Rat) / 320000000000000000000), D0 := ((849513166589285713903 : Rat) / 320000000000000000000), D1 := ((267921134589285713903 : Rat) / 320000000000000000000), D2 := ((30973966589285713903 : Rat) / 320000000000000000000), D3 := ((44015636732142856599 : Rat) / 640000000000000000000), D4 := ((84677843589285651031 : Rat) / 640000000000000000000), LB := ((13327243966323177 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((849513166589285713903 : Rat) / 320000000000000000000), R := ((1700656541946428570643 : Rat) / 640000000000000000000), D0 := ((1700656541946428570643 : Rat) / 640000000000000000000), D1 := ((537472477946428570643 : Rat) / 640000000000000000000), D2 := ((63578141946428570643 : Rat) / 640000000000000000000), D3 := ((21192713982142856881 : Rat) / 320000000000000000000), D4 := ((41523817410714254097 : Rat) / 320000000000000000000), LB := ((4863148534195699 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1700656541946428570643 : Rat) / 640000000000000000000), R := ((42557168767857142837 : Rat) / 16000000000000000000), D0 := ((42557168767857142837 : Rat) / 16000000000000000000), D1 := ((13477567167857142837 : Rat) / 16000000000000000000), D2 := ((1630208767857142837 : Rat) / 16000000000000000000), D3 := ((1630208767857142837 : Rat) / 25600000000000000000), D4 := ((81417426053571365357 : Rat) / 640000000000000000000), LB := ((7376632507581721 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((42557168767857142837 : Rat) / 16000000000000000000), R := ((852773584124999999577 : Rat) / 320000000000000000000), D0 := ((852773584124999999577 : Rat) / 320000000000000000000), D1 := ((271181552124999999577 : Rat) / 320000000000000000000), D2 := ((34234384124999999577 : Rat) / 320000000000000000000), D3 := ((4890626303571428511 : Rat) / 80000000000000000000), D4 := ((1994680432142855563 : Rat) / 16000000000000000000), LB := ((123622460070443 : Rat) / 31250000000000000) }
+]
+
+def block186RightChunk000L : Rat := ((89045908482142857223 : Rat) / 50000000000000000000)
+def block186RightChunk000R : Rat := ((852773584124999999577 : Rat) / 320000000000000000000)
+
+def block186RightChunk000Certificate : Bool :=
+  allBoxesValid block186RightChunk000 &&
+  coversFromBool block186RightChunk000 block186RightChunk000L block186RightChunk000R
+
+theorem block186RightChunk000Certificate_eq_true :
+    block186RightChunk000Certificate = true := by
+  native_decide
+
+def block186RightChunk001 : List RatBox := [
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((852773584124999999577 : Rat) / 320000000000000000000), R := ((427201896446428571207 : Rat) / 160000000000000000000), D0 := ((427201896446428571207 : Rat) / 160000000000000000000), D1 := ((136405880446428571207 : Rat) / 160000000000000000000), D2 := ((17932296446428571207 : Rat) / 160000000000000000000), D3 := ((17932296446428571207 : Rat) / 320000000000000000000), D4 := ((38263399874999968423 : Rat) / 320000000000000000000), LB := ((540757443881823 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((427201896446428571207 : Rat) / 160000000000000000000), R := ((107208026303571428511 : Rat) / 40000000000000000000), D0 := ((107208026303571428511 : Rat) / 40000000000000000000), D1 := ((34509022303571428511 : Rat) / 40000000000000000000), D2 := ((4890626303571428511 : Rat) / 40000000000000000000), D3 := ((1630208767857142837 : Rat) / 32000000000000000000), D4 := ((18316595553571412793 : Rat) / 160000000000000000000), LB := ((7020224908924011 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((107208026303571428511 : Rat) / 40000000000000000000), R := ((216046261374999999859 : Rat) / 80000000000000000000), D0 := ((216046261374999999859 : Rat) / 80000000000000000000), D1 := ((70648253374999999859 : Rat) / 80000000000000000000), D2 := ((11411461374999999859 : Rat) / 80000000000000000000), D3 := ((1630208767857142837 : Rat) / 40000000000000000000), D4 := ((4171596696428567489 : Rat) / 40000000000000000000), LB := ((163676193511679 : Rat) / 25000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((216046261374999999859 : Rat) / 80000000000000000000), R := ((27209558767857142837 : Rat) / 10000000000000000000), D0 := ((27209558767857142837 : Rat) / 10000000000000000000), D1 := ((9034807767857142837 : Rat) / 10000000000000000000), D2 := ((1630208767857142837 : Rat) / 10000000000000000000), D3 := ((1630208767857142837 : Rat) / 80000000000000000000), D4 := ((6712984624999992141 : Rat) / 80000000000000000000), LB := ((1275642878055111 : Rat) / 12500000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((27209558767857142837 : Rat) / 10000000000000000000), R := ((547199064553571428349 : Rat) / 200000000000000000000), D0 := ((547199064553571428349 : Rat) / 200000000000000000000), D1 := ((183704044553571428349 : Rat) / 200000000000000000000), D2 := ((35612064553571428349 : Rat) / 200000000000000000000), D3 := ((3007889196428571609 : Rat) / 200000000000000000000), D4 := ((635346982142856163 : Rat) / 10000000000000000000), LB := ((7373753754575643 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((547199064553571428349 : Rat) / 200000000000000000000), R := ((275103476874999999979 : Rat) / 100000000000000000000), D0 := ((275103476874999999979 : Rat) / 100000000000000000000), D1 := ((93355966874999999979 : Rat) / 100000000000000000000), D2 := ((19309976874999999979 : Rat) / 100000000000000000000), D3 := ((3007889196428571609 : Rat) / 100000000000000000000), D4 := ((9699050446428551651 : Rat) / 200000000000000000000), LB := ((16085603178085883 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((275103476874999999979 : Rat) / 100000000000000000000), R := ((2203835704196428571441 : Rat) / 800000000000000000000), D0 := ((2203835704196428571441 : Rat) / 800000000000000000000), D1 := ((749855624196428571441 : Rat) / 800000000000000000000), D2 := ((157487704196428571441 : Rat) / 800000000000000000000), D3 := ((27071002767857144481 : Rat) / 800000000000000000000), D4 := ((3345580624999990021 : Rat) / 100000000000000000000), LB := ((1092711266222901 : Rat) / 50000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2203835704196428571441 : Rat) / 800000000000000000000), R := ((44136871867857142861 : Rat) / 16000000000000000000), D0 := ((44136871867857142861 : Rat) / 16000000000000000000), D1 := ((15057270267857142861 : Rat) / 16000000000000000000), D2 := ((3209911867857142861 : Rat) / 16000000000000000000), D3 := ((3007889196428571609 : Rat) / 80000000000000000000), D4 := ((23756755803571348559 : Rat) / 800000000000000000000), LB := ((6029394154237977 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((44136871867857142861 : Rat) / 16000000000000000000), R := ((4416695075982142857709 : Rat) / 1600000000000000000000), D0 := ((4416695075982142857709 : Rat) / 1600000000000000000000), D1 := ((1508734915982142857709 : Rat) / 1600000000000000000000), D2 := ((323999075982142857709 : Rat) / 1600000000000000000000), D3 := ((63165673125000003789 : Rat) / 1600000000000000000000), D4 := ((414977332142855539 : Rat) / 16000000000000000000), LB := ((5979515231592347 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((4416695075982142857709 : Rat) / 1600000000000000000000), R := ((2209851482589285714659 : Rat) / 800000000000000000000), D0 := ((2209851482589285714659 : Rat) / 800000000000000000000), D1 := ((755871402589285714659 : Rat) / 800000000000000000000), D2 := ((163503482589285714659 : Rat) / 800000000000000000000), D3 := ((33086781160714287699 : Rat) / 800000000000000000000), D4 := ((38489844017856982291 : Rat) / 1600000000000000000000), LB := ((3275172266000159 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2209851482589285714659 : Rat) / 800000000000000000000), R := ((1768482763910714286049 : Rat) / 640000000000000000000), D0 := ((1768482763910714286049 : Rat) / 640000000000000000000), D1 := ((605298699910714286049 : Rat) / 640000000000000000000), D2 := ((131404363910714286049 : Rat) / 640000000000000000000), D3 := ((27071002767857144481 : Rat) / 640000000000000000000), D4 := ((17740977410714205341 : Rat) / 800000000000000000000), LB := ((1419040122664951 : Rat) / 625000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1768482763910714286049 : Rat) / 640000000000000000000), R := ((4422710854375000000927 : Rat) / 1600000000000000000000), D0 := ((4422710854375000000927 : Rat) / 1600000000000000000000), D1 := ((1514750694375000000927 : Rat) / 1600000000000000000000), D2 := ((330014854375000000927 : Rat) / 1600000000000000000000), D3 := ((69181451517857147007 : Rat) / 1600000000000000000000), D4 := ((13591204089285649951 : Rat) / 640000000000000000000), LB := ((377495103797143 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((4422710854375000000927 : Rat) / 1600000000000000000000), R := ((17693851306696428575317 : Rat) / 6400000000000000000000), D0 := ((17693851306696428575317 : Rat) / 6400000000000000000000), D1 := ((6062010666696428575317 : Rat) / 6400000000000000000000), D2 := ((1323067306696428575317 : Rat) / 6400000000000000000000), D3 := ((279733695267857159637 : Rat) / 6400000000000000000000), D4 := ((32474065624999839073 : Rat) / 1600000000000000000000), LB := ((1059850713757797 : Rat) / 625000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17693851306696428575317 : Rat) / 6400000000000000000000), R := ((8848429597946428573463 : Rat) / 3200000000000000000000), D0 := ((8848429597946428573463 : Rat) / 3200000000000000000000), D1 := ((3032509277946428573463 : Rat) / 3200000000000000000000), D2 := ((663037597946428573463 : Rat) / 3200000000000000000000), D3 := ((141370792232142865623 : Rat) / 3200000000000000000000), D4 := ((126888373303570784683 : Rat) / 6400000000000000000000), LB := ((1212665395814369 : Rat) / 1250000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((8848429597946428573463 : Rat) / 3200000000000000000000), R := ((3539973417017857143707 : Rat) / 1280000000000000000000), D0 := ((3539973417017857143707 : Rat) / 1280000000000000000000), D1 := ((1213605289017857143707 : Rat) / 1280000000000000000000), D2 := ((265816617017857143707 : Rat) / 1280000000000000000000), D3 := ((57149894732142860571 : Rat) / 1280000000000000000000), D4 := ((61940242053571106537 : Rat) / 3200000000000000000000), LB := ((31814049777073583 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((3539973417017857143707 : Rat) / 1280000000000000000000), R := ((35402742059375000008679 : Rat) / 12800000000000000000000), D0 := ((35402742059375000008679 : Rat) / 12800000000000000000000), D1 := ((12139060779375000008679 : Rat) / 12800000000000000000000), D2 := ((2661174059375000008679 : Rat) / 12800000000000000000000), D3 := ((574506836517857177319 : Rat) / 12800000000000000000000), D4 := ((24174518982142728293 : Rat) / 1280000000000000000000), LB := ((371667869112427 : Rat) / 312500000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35402742059375000008679 : Rat) / 12800000000000000000000), R := ((553214842946428571567 : Rat) / 200000000000000000000), D0 := ((553214842946428571567 : Rat) / 200000000000000000000), D1 := ((189719822946428571567 : Rat) / 200000000000000000000), D2 := ((41627842946428571567 : Rat) / 200000000000000000000), D3 := ((9023667589285714827 : Rat) / 200000000000000000000), D4 := ((238737300624998711321 : Rat) / 12800000000000000000000), LB := ((2313779107116637 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((553214842946428571567 : Rat) / 200000000000000000000), R := ((35408757837767857151897 : Rat) / 12800000000000000000000), D0 := ((35408757837767857151897 : Rat) / 12800000000000000000000), D1 := ((12145076557767857151897 : Rat) / 12800000000000000000000), D2 := ((2667189837767857151897 : Rat) / 12800000000000000000000), D3 := ((580522614910714320537 : Rat) / 12800000000000000000000), D4 := ((3683272053571408433 : Rat) / 200000000000000000000), LB := ((3408051182308691 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35408757837767857151897 : Rat) / 12800000000000000000000), R := ((17705882863482142861753 : Rat) / 6400000000000000000000), D0 := ((17705882863482142861753 : Rat) / 6400000000000000000000), D1 := ((6074042223482142861753 : Rat) / 6400000000000000000000), D2 := ((1335098863482142861753 : Rat) / 6400000000000000000000), D3 := ((291765252053571446073 : Rat) / 6400000000000000000000), D4 := ((232721522232141568103 : Rat) / 12800000000000000000000), LB := ((45796826887367637 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17705882863482142861753 : Rat) / 6400000000000000000000), R := ((7082954723232142859023 : Rat) / 2560000000000000000000), D0 := ((7082954723232142859023 : Rat) / 2560000000000000000000), D1 := ((2430218467232142859023 : Rat) / 2560000000000000000000), D2 := ((534641123232142859023 : Rat) / 2560000000000000000000), D3 := ((117307678660714292751 : Rat) / 2560000000000000000000), D4 := ((114856816517856498247 : Rat) / 6400000000000000000000), LB := ((2549367848853623 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((7082954723232142859023 : Rat) / 2560000000000000000000), R := ((8854445376339285716681 : Rat) / 3200000000000000000000), D0 := ((8854445376339285716681 : Rat) / 3200000000000000000000), D1 := ((3038525056339285716681 : Rat) / 3200000000000000000000), D2 := ((669053376339285716681 : Rat) / 3200000000000000000000), D3 := ((147386570625000008841 : Rat) / 3200000000000000000000), D4 := ((45341148767856884977 : Rat) / 2560000000000000000000), LB := ((3644166627014833 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((8854445376339285716681 : Rat) / 3200000000000000000000), R := ((70838570899910714305057 : Rat) / 25600000000000000000000), D0 := ((70838570899910714305057 : Rat) / 25600000000000000000000), D1 := ((24311208339910714305057 : Rat) / 25600000000000000000000), D2 := ((5355434899910714305057 : Rat) / 25600000000000000000000), D3 := ((1182100454196428642337 : Rat) / 25600000000000000000000), D4 := ((55924463660713963319 : Rat) / 3200000000000000000000), LB := ((249292153577807 : Rat) / 400000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70838570899910714305057 : Rat) / 25600000000000000000000), R := ((35420789394553571438333 : Rat) / 12800000000000000000000), D0 := ((35420789394553571438333 : Rat) / 12800000000000000000000), D1 := ((12157108114553571438333 : Rat) / 12800000000000000000000), D2 := ((2679221394553571438333 : Rat) / 12800000000000000000000), D3 := ((592554171696428606973 : Rat) / 12800000000000000000000), D4 := ((444387820089283134943 : Rat) / 25600000000000000000000), LB := ((5498516957292421 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35420789394553571438333 : Rat) / 12800000000000000000000), R := ((2833783467132142857931 : Rat) / 1024000000000000000000), D0 := ((2833783467132142857931 : Rat) / 1024000000000000000000), D1 := ((972688964732142857931 : Rat) / 1024000000000000000000), D2 := ((214458027132142857931 : Rat) / 1024000000000000000000), D3 := ((237623246517857157111 : Rat) / 5120000000000000000000), D4 := ((220689965446427281667 : Rat) / 12800000000000000000000), LB := ((2409860635670391 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2833783467132142857931 : Rat) / 1024000000000000000000), R := ((17711898641875000004971 : Rat) / 6400000000000000000000), D0 := ((17711898641875000004971 : Rat) / 6400000000000000000000), D1 := ((6080058001875000004971 : Rat) / 6400000000000000000000), D2 := ((1341114641875000004971 : Rat) / 6400000000000000000000), D3 := ((297781030446428589291 : Rat) / 6400000000000000000000), D4 := ((17534881667857039669 : Rat) / 1024000000000000000000), LB := ((8392900242423229 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17711898641875000004971 : Rat) / 6400000000000000000000), R := ((70850602456696428591493 : Rat) / 25600000000000000000000), D0 := ((70850602456696428591493 : Rat) / 25600000000000000000000), D1 := ((24323239896696428591493 : Rat) / 25600000000000000000000), D2 := ((5367466456696428591493 : Rat) / 25600000000000000000000), D3 := ((1194132010982142928773 : Rat) / 25600000000000000000000), D4 := ((108841038124999355029 : Rat) / 6400000000000000000000), LB := ((36292494192385893 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70850602456696428591493 : Rat) / 25600000000000000000000), R := ((35426805172946428581551 : Rat) / 12800000000000000000000), D0 := ((35426805172946428581551 : Rat) / 12800000000000000000000), D1 := ((12163123892946428581551 : Rat) / 12800000000000000000000), D2 := ((2685237172946428581551 : Rat) / 12800000000000000000000), D3 := ((598569950089285750191 : Rat) / 12800000000000000000000), D4 := ((432356263303568848507 : Rat) / 25600000000000000000000), LB := ((6237355954755719 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35426805172946428581551 : Rat) / 12800000000000000000000), R := ((70856618235089285734711 : Rat) / 25600000000000000000000), D0 := ((70856618235089285734711 : Rat) / 25600000000000000000000), D1 := ((24329255675089285734711 : Rat) / 25600000000000000000000), D2 := ((5373482235089285734711 : Rat) / 25600000000000000000000), D3 := ((1200147789375000071991 : Rat) / 25600000000000000000000), D4 := ((214674187053570138449 : Rat) / 12800000000000000000000), LB := ((26653078450455947 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70856618235089285734711 : Rat) / 25600000000000000000000), R := ((885745326553571428829 : Rat) / 320000000000000000000), D0 := ((885745326553571428829 : Rat) / 320000000000000000000), D1 := ((304153294553571428829 : Rat) / 320000000000000000000), D2 := ((67206126553571428829 : Rat) / 320000000000000000000), D3 := ((3007889196428571609 : Rat) / 64000000000000000000), D4 := ((426340484910711705289 : Rat) / 25600000000000000000000), LB := ((11348623294482607 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((885745326553571428829 : Rat) / 320000000000000000000), R := ((70862634013482142877929 : Rat) / 25600000000000000000000), D0 := ((70862634013482142877929 : Rat) / 25600000000000000000000), D1 := ((24335271453482142877929 : Rat) / 25600000000000000000000), D2 := ((5379498013482142877929 : Rat) / 25600000000000000000000), D3 := ((1206163567767857215209 : Rat) / 25600000000000000000000), D4 := ((5291657446428539171 : Rat) / 320000000000000000000), LB := ((1932528004555123 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70862634013482142877929 : Rat) / 25600000000000000000000), R := ((35432820951339285724769 : Rat) / 12800000000000000000000), D0 := ((35432820951339285724769 : Rat) / 12800000000000000000000), D1 := ((12169139671339285724769 : Rat) / 12800000000000000000000), D2 := ((2691252951339285724769 : Rat) / 12800000000000000000000), D3 := ((604585728482142893409 : Rat) / 12800000000000000000000), D4 := ((420324706517854562071 : Rat) / 25600000000000000000000), LB := ((3308663581824689 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35432820951339285724769 : Rat) / 12800000000000000000000), R := ((70868649791875000021147 : Rat) / 25600000000000000000000), D0 := ((70868649791875000021147 : Rat) / 25600000000000000000000), D1 := ((24341287231875000021147 : Rat) / 25600000000000000000000), D2 := ((5385513791875000021147 : Rat) / 25600000000000000000000), D3 := ((1212179346160714358427 : Rat) / 25600000000000000000000), D4 := ((208658408660712995231 : Rat) / 12800000000000000000000), LB := ((14357646377216593 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70868649791875000021147 : Rat) / 25600000000000000000000), R := ((17717914420267857148189 : Rat) / 6400000000000000000000), D0 := ((17717914420267857148189 : Rat) / 6400000000000000000000), D1 := ((6086073780267857148189 : Rat) / 6400000000000000000000), D2 := ((1347130420267857148189 : Rat) / 6400000000000000000000), D3 := ((303796808839285732509 : Rat) / 6400000000000000000000), D4 := ((414308928124997418853 : Rat) / 25600000000000000000000), LB := ((6387351382941553 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17717914420267857148189 : Rat) / 6400000000000000000000), R := ((14174933114053571432873 : Rat) / 5120000000000000000000), D0 := ((14174933114053571432873 : Rat) / 5120000000000000000000), D1 := ((4869460602053571432873 : Rat) / 5120000000000000000000), D2 := ((1078305914053571432873 : Rat) / 5120000000000000000000), D3 := ((243639024910714300329 : Rat) / 5120000000000000000000), D4 := ((102825259732142211811 : Rat) / 6400000000000000000000), LB := ((5900539831657503 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((14174933114053571432873 : Rat) / 5120000000000000000000), R := ((35438836729732142867987 : Rat) / 12800000000000000000000), D0 := ((35438836729732142867987 : Rat) / 12800000000000000000000), D1 := ((12175155449732142867987 : Rat) / 12800000000000000000000), D2 := ((2697268729732142867987 : Rat) / 12800000000000000000000), D3 := ((610601506875000036627 : Rat) / 12800000000000000000000), D4 := ((81658629946428055127 : Rat) / 5120000000000000000000), LB := ((11443529229476779 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35438836729732142867987 : Rat) / 12800000000000000000000), R := ((70880681348660714307583 : Rat) / 25600000000000000000000), D0 := ((70880681348660714307583 : Rat) / 25600000000000000000000), D1 := ((24353318788660714307583 : Rat) / 25600000000000000000000), D2 := ((5397545348660714307583 : Rat) / 25600000000000000000000), D3 := ((1224210902946428644863 : Rat) / 25600000000000000000000), D4 := ((202642630267855852013 : Rat) / 12800000000000000000000), LB := ((5854483825548651 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70880681348660714307583 : Rat) / 25600000000000000000000), R := ((8860461154732142859899 : Rat) / 3200000000000000000000), D0 := ((8860461154732142859899 : Rat) / 3200000000000000000000), D1 := ((3044540834732142859899 : Rat) / 3200000000000000000000), D2 := ((675069154732142859899 : Rat) / 3200000000000000000000), D3 := ((153402349017857152059 : Rat) / 3200000000000000000000), D4 := ((402277371339283132417 : Rat) / 25600000000000000000000), LB := ((6302239877170601 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((8860461154732142859899 : Rat) / 3200000000000000000000), R := ((70886697127053571450801 : Rat) / 25600000000000000000000), D0 := ((70886697127053571450801 : Rat) / 25600000000000000000000), D1 := ((24359334567053571450801 : Rat) / 25600000000000000000000), D2 := ((5403561127053571450801 : Rat) / 25600000000000000000000), D3 := ((1230226681339285788081 : Rat) / 25600000000000000000000), D4 := ((49908685267856820101 : Rat) / 3200000000000000000000), LB := ((14137323785640143 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70886697127053571450801 : Rat) / 25600000000000000000000), R := ((7088970501625000002241 : Rat) / 2560000000000000000000), D0 := ((7088970501625000002241 : Rat) / 2560000000000000000000), D1 := ((2436234245625000002241 : Rat) / 2560000000000000000000), D2 := ((540656901625000002241 : Rat) / 2560000000000000000000), D3 := ((123323457053571435969 : Rat) / 2560000000000000000000), D4 := ((396261592946425989199 : Rat) / 25600000000000000000000), LB := ((4078734091281233 : Rat) / 25000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((7088970501625000002241 : Rat) / 2560000000000000000000), R := ((70892712905446428594019 : Rat) / 25600000000000000000000), D0 := ((70892712905446428594019 : Rat) / 25600000000000000000000), D1 := ((24365350345446428594019 : Rat) / 25600000000000000000000), D2 := ((5409576905446428594019 : Rat) / 25600000000000000000000), D3 := ((1236242459732142931299 : Rat) / 25600000000000000000000), D4 := ((39325370374999741759 : Rat) / 2560000000000000000000), LB := ((9572468810251089 : Rat) / 50000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70892712905446428594019 : Rat) / 25600000000000000000000), R := ((17723930198660714291407 : Rat) / 6400000000000000000000), D0 := ((17723930198660714291407 : Rat) / 6400000000000000000000), D1 := ((6092089558660714291407 : Rat) / 6400000000000000000000), D2 := ((1353146198660714291407 : Rat) / 6400000000000000000000), D3 := ((309812587232142875727 : Rat) / 6400000000000000000000), D4 := ((390245814553568845981 : Rat) / 25600000000000000000000), LB := ((22635136509618903 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17723930198660714291407 : Rat) / 6400000000000000000000), R := ((70898728683839285737237 : Rat) / 25600000000000000000000), D0 := ((70898728683839285737237 : Rat) / 25600000000000000000000), D1 := ((24371366123839285737237 : Rat) / 25600000000000000000000), D2 := ((5415592683839285737237 : Rat) / 25600000000000000000000), D3 := ((1242258238125000074517 : Rat) / 25600000000000000000000), D4 := ((96809481339285068593 : Rat) / 6400000000000000000000), LB := ((2679353633799897 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70898728683839285737237 : Rat) / 25600000000000000000000), R := ((35450868286517857154423 : Rat) / 12800000000000000000000), D0 := ((35450868286517857154423 : Rat) / 12800000000000000000000), D1 := ((12187187006517857154423 : Rat) / 12800000000000000000000), D2 := ((2709300286517857154423 : Rat) / 12800000000000000000000), D3 := ((622633063660714323063 : Rat) / 12800000000000000000000), D4 := ((384230036160711702763 : Rat) / 25600000000000000000000), LB := ((790708512045657 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35450868286517857154423 : Rat) / 12800000000000000000000), R := ((14180948892446428576091 : Rat) / 5120000000000000000000), D0 := ((14180948892446428576091 : Rat) / 5120000000000000000000), D1 := ((4875476380446428576091 : Rat) / 5120000000000000000000), D2 := ((1084321692446428576091 : Rat) / 5120000000000000000000), D3 := ((249654803303571443547 : Rat) / 5120000000000000000000), D4 := ((190611073482141565577 : Rat) / 12800000000000000000000), LB := ((7429591664513957 : Rat) / 20000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((14180948892446428576091 : Rat) / 5120000000000000000000), R := ((2215867260982142857877 : Rat) / 800000000000000000000), D0 := ((2215867260982142857877 : Rat) / 800000000000000000000), D1 := ((761887180982142857877 : Rat) / 800000000000000000000), D2 := ((169519260982142857877 : Rat) / 800000000000000000000), D3 := ((39102559553571430917 : Rat) / 800000000000000000000), D4 := ((75642851553570911909 : Rat) / 5120000000000000000000), LB := ((33875790159941 : Rat) / 78125000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((2215867260982142857877 : Rat) / 800000000000000000000), R := ((70910760240625000023673 : Rat) / 25600000000000000000000), D0 := ((70910760240625000023673 : Rat) / 25600000000000000000000), D1 := ((24383397680625000023673 : Rat) / 25600000000000000000000), D2 := ((5427624240625000023673 : Rat) / 25600000000000000000000), D3 := ((1254289794910714360953 : Rat) / 25600000000000000000000), D4 := ((11725199017857062123 : Rat) / 800000000000000000000), LB := ((2513816991228379 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70910760240625000023673 : Rat) / 25600000000000000000000), R := ((35456884064910714297641 : Rat) / 12800000000000000000000), D0 := ((35456884064910714297641 : Rat) / 12800000000000000000000), D1 := ((12193202784910714297641 : Rat) / 12800000000000000000000), D2 := ((2715316064910714297641 : Rat) / 12800000000000000000000), D3 := ((628648842053571466281 : Rat) / 12800000000000000000000), D4 := ((372198479374997416327 : Rat) / 25600000000000000000000), LB := ((1447575221497771 : Rat) / 2500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35456884064910714297641 : Rat) / 12800000000000000000000), R := ((70916776019017857166891 : Rat) / 25600000000000000000000), D0 := ((70916776019017857166891 : Rat) / 25600000000000000000000), D1 := ((24389413459017857166891 : Rat) / 25600000000000000000000), D2 := ((5433640019017857166891 : Rat) / 25600000000000000000000), D3 := ((1260305573303571504171 : Rat) / 25600000000000000000000), D4 := ((184595295089284422359 : Rat) / 12800000000000000000000), LB := ((6625031585270613 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((70916776019017857166891 : Rat) / 25600000000000000000000), R := ((141839567816428571477 : Rat) / 51200000000000000000), D0 := ((141839567816428571477 : Rat) / 51200000000000000000), D1 := ((48784842696428571477 : Rat) / 51200000000000000000), D2 := ((10873295816428571477 : Rat) / 51200000000000000000), D3 := ((63165673125000003789 : Rat) / 1280000000000000000000), D4 := ((366182700982140273109 : Rat) / 25600000000000000000000), LB := ((3766389867702613 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((141839567816428571477 : Rat) / 51200000000000000000), R := ((35462899843303571440859 : Rat) / 12800000000000000000000), D0 := ((35462899843303571440859 : Rat) / 12800000000000000000000), D1 := ((12199218563303571440859 : Rat) / 12800000000000000000000), D2 := ((2721331843303571440859 : Rat) / 12800000000000000000000), D3 := ((634664620446428609499 : Rat) / 12800000000000000000000), D4 := ((726349623571423403 : Rat) / 51200000000000000000), LB := ((17111803652131163 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35462899843303571440859 : Rat) / 12800000000000000000000), R := ((8866476933125000003117 : Rat) / 3200000000000000000000), D0 := ((8866476933125000003117 : Rat) / 3200000000000000000000), D1 := ((3050556613125000003117 : Rat) / 3200000000000000000000), D2 := ((681084933125000003117 : Rat) / 3200000000000000000000), D3 := ((159418127410714295277 : Rat) / 3200000000000000000000), D4 := ((178579516696427279141 : Rat) / 12800000000000000000000), LB := ((39211127883570507 : Rat) / 100000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((8866476933125000003117 : Rat) / 3200000000000000000000), R := ((35468915621696428584077 : Rat) / 12800000000000000000000), D0 := ((35468915621696428584077 : Rat) / 12800000000000000000000), D1 := ((12205234341696428584077 : Rat) / 12800000000000000000000), D2 := ((2727347621696428584077 : Rat) / 12800000000000000000000), D3 := ((640680398839285752717 : Rat) / 12800000000000000000000), D4 := ((43892906874999676883 : Rat) / 3200000000000000000000), LB := ((3219616276589343 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((35468915621696428584077 : Rat) / 12800000000000000000000), R := ((17735961755446428577843 : Rat) / 6400000000000000000000), D0 := ((17735961755446428577843 : Rat) / 6400000000000000000000), D1 := ((6104121115446428577843 : Rat) / 6400000000000000000000), D2 := ((1365177755446428577843 : Rat) / 6400000000000000000000), D3 := ((321844144017857162163 : Rat) / 6400000000000000000000), D4 := ((172563738303570135923 : Rat) / 12800000000000000000000), LB := ((579646204223877 : Rat) / 625000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17735961755446428577843 : Rat) / 6400000000000000000000), R := ((7094986280017857145459 : Rat) / 2560000000000000000000), D0 := ((7094986280017857145459 : Rat) / 2560000000000000000000), D1 := ((2442250024017857145459 : Rat) / 2560000000000000000000), D2 := ((546672680017857145459 : Rat) / 2560000000000000000000), D3 := ((129339235446428579187 : Rat) / 2560000000000000000000), D4 := ((84777924553570782157 : Rat) / 6400000000000000000000), LB := ((621785449161999 : Rat) / 500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((7094986280017857145459 : Rat) / 2560000000000000000000), R := ((4434742411160714287363 : Rat) / 1600000000000000000000), D0 := ((4434742411160714287363 : Rat) / 1600000000000000000000), D1 := ((1526782251160714287363 : Rat) / 1600000000000000000000), D2 := ((342046411160714287363 : Rat) / 1600000000000000000000), D3 := ((81213008303571433443 : Rat) / 1600000000000000000000), D4 := ((33309591982142598541 : Rat) / 2560000000000000000000), LB := ((7966562961988777 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((4434742411160714287363 : Rat) / 1600000000000000000000), R := ((17741977533839285721061 : Rat) / 6400000000000000000000), D0 := ((17741977533839285721061 : Rat) / 6400000000000000000000), D1 := ((6110136893839285721061 : Rat) / 6400000000000000000000), D2 := ((1371193533839285721061 : Rat) / 6400000000000000000000), D3 := ((327859922410714305381 : Rat) / 6400000000000000000000), D4 := ((20442508839285552637 : Rat) / 1600000000000000000000), LB := ((128774870023729 : Rat) / 200000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17741977533839285721061 : Rat) / 6400000000000000000000), R := ((1774498542303571429267 : Rat) / 640000000000000000000), D0 := ((1774498542303571429267 : Rat) / 640000000000000000000), D1 := ((611314478303571429267 : Rat) / 640000000000000000000), D2 := ((137420142303571429267 : Rat) / 640000000000000000000), D3 := ((33086781160714287699 : Rat) / 640000000000000000000), D4 := ((78762146160713638939 : Rat) / 6400000000000000000000), LB := ((764308533321767 : Rat) / 500000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1774498542303571429267 : Rat) / 640000000000000000000), R := ((17747993312232142864279 : Rat) / 6400000000000000000000), D0 := ((17747993312232142864279 : Rat) / 6400000000000000000000), D1 := ((6116152672232142864279 : Rat) / 6400000000000000000000), D2 := ((1377209312232142864279 : Rat) / 6400000000000000000000), D3 := ((333875700803571448599 : Rat) / 6400000000000000000000), D4 := ((7575425696428506733 : Rat) / 640000000000000000000), LB := ((12828477398794391 : Rat) / 5000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((17747993312232142864279 : Rat) / 6400000000000000000000), R := ((1109437575089285714743 : Rat) / 400000000000000000000), D0 := ((1109437575089285714743 : Rat) / 400000000000000000000), D1 := ((382447535089285714743 : Rat) / 400000000000000000000), D2 := ((86263575089285714743 : Rat) / 400000000000000000000), D3 := ((21055224375000001263 : Rat) / 400000000000000000000), D4 := ((72746367767856495721 : Rat) / 6400000000000000000000), LB := ((3765750138252033 : Rat) / 1000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((1109437575089285714743 : Rat) / 400000000000000000000), R := ((8878508489910714289553 : Rat) / 3200000000000000000000), D0 := ((8878508489910714289553 : Rat) / 3200000000000000000000), D1 := ((3062588169910714289553 : Rat) / 3200000000000000000000), D2 := ((693116489910714289553 : Rat) / 3200000000000000000000), D3 := ((171449684196428581713 : Rat) / 3200000000000000000000), D4 := ((4358654910714245257 : Rat) / 400000000000000000000), LB := ((25434146690281323 : Rat) / 10000000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((8878508489910714289553 : Rat) / 3200000000000000000000), R := ((4440758189553571430581 : Rat) / 1600000000000000000000), D0 := ((4440758189553571430581 : Rat) / 1600000000000000000000), D1 := ((1532798029553571430581 : Rat) / 1600000000000000000000), D2 := ((348062189553571430581 : Rat) / 1600000000000000000000), D3 := ((87228786696428576661 : Rat) / 1600000000000000000000), D4 := ((31861350089285390447 : Rat) / 3200000000000000000000), LB := ((590176449233637 : Rat) / 100000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((4440758189553571430581 : Rat) / 1600000000000000000000), R := ((444376607875000000219 : Rat) / 160000000000000000000), D0 := ((444376607875000000219 : Rat) / 160000000000000000000), D1 := ((153580591875000000219 : Rat) / 160000000000000000000), D2 := ((35107007875000000219 : Rat) / 160000000000000000000), D3 := ((9023667589285714827 : Rat) / 160000000000000000000), D4 := ((14426730446428409419 : Rat) / 1600000000000000000000), LB := ((1019970333072473 : Rat) / 200000000000000000) },
+  { w1 := ((17661103135179 : Rat) / 10000000000000), w2 := (0 : Rat), w3 := ((1771063606594249 : Rat) / 10000000000000000), w4 := ((4726470658437517 : Rat) / 50000000000000000), s1 := ((18174751 : Rat) / 10000000), s2 := ((511587 : Rat) / 200000), s3 := ((27209558767857142837 : Rat) / 10000000000000000000), s4 := ((27844905749999999 : Rat) / 10000000000000000), L := ((444376607875000000219 : Rat) / 160000000000000000000), R := ((69527841517857142897 : Rat) / 25000000000000000000), D0 := ((69527841517857142897 : Rat) / 25000000000000000000), D1 := ((24090964017857142897 : Rat) / 25000000000000000000), D2 := ((5579466517857142897 : Rat) / 25000000000000000000), D3 := ((3007889196428571609 : Rat) / 50000000000000000000), D4 := ((1141884124999983781 : Rat) / 160000000000000000000), LB := ((1832028662152027 : Rat) / 250000000000000000) }
+]
+
+def block186RightChunk001L : Rat := ((852773584124999999577 : Rat) / 320000000000000000000)
+def block186RightChunk001R : Rat := ((69527841517857142897 : Rat) / 25000000000000000000)
+
+def block186RightChunk001Certificate : Bool :=
+  allBoxesValid block186RightChunk001 &&
+  coversFromBool block186RightChunk001 block186RightChunk001L block186RightChunk001R
+
+theorem block186RightChunk001Certificate_eq_true :
+    block186RightChunk001Certificate = true := by
+  native_decide
+
+def block186RightChainCertificate : Bool :=
+  decide (
+    block186RightL = ((89045908482142857223 : Rat) / 50000000000000000000) /\
+    ((852773584124999999577 : Rat) / 320000000000000000000) = ((852773584124999999577 : Rat) / 320000000000000000000) /\
+    ((69527841517857142897 : Rat) / 25000000000000000000) = block186RightR)
+
+theorem block186RightChainCertificate_eq_true :
+    block186RightChainCertificate = true := by
+  native_decide
+
+def block186LeftBoxCount : Nat := boxCount block186LeftBoxes
+def block186RightBoxCount : Nat := 163
+
+def block186_rational_certificate : Prop :=
+    block186LeftCertificate = true /\
+    block186RightChainCertificate = true /\
+    block186RightChunk000Certificate = true /\
+    block186RightChunk001Certificate = true
+
+theorem block186_rational_certificate_proof :
+    block186_rational_certificate := by
+  exact ⟨block186LeftCertificate_eq_true, block186RightChainCertificate_eq_true, block186RightChunk000Certificate_eq_true, block186RightChunk001Certificate_eq_true⟩
+
+end Block186
+end M1817475
+end Erdos1038Lean
+
+
+set_option maxHeartbeats 0
+set_option maxRecDepth 100000
+
+namespace Erdos1038Lean
+namespace M1817475
+namespace Block186
+
+open Set
+
+def block186W1 : Rat := ((17661103135179 : Rat) / 10000000000000)
+def block186W2 : Rat := (0 : Rat)
+def block186W3 : Rat := ((1771063606594249 : Rat) / 10000000000000000)
+def block186W4 : Rat := ((4726470658437517 : Rat) / 50000000000000000)
+def block186S1 : Rat := ((18174751 : Rat) / 10000000)
+def block186S2 : Rat := ((511587 : Rat) / 200000)
+def block186S3 : Rat := ((27209558767857142837 : Rat) / 10000000000000000000)
+def block186S4 : Rat := ((27844905749999999 : Rat) / 10000000000000000)
+
+noncomputable def block186V (y : ℝ) : ℝ :=
+  ratPotential block186W1 block186W2 block186W3 block186W4 block186S1 block186S2 block186S3 block186S4 y
+
+def block186LeftParamsCertificate : Bool :=
+  allBoxesSameParams block186LeftBoxes block186W1 block186W2 block186W3 block186W4 block186S1 block186S2 block186S3 block186S4
+
+theorem block186LeftParamsCertificate_eq_true :
+    block186LeftParamsCertificate = true := by
+  native_decide
+
+theorem block186_left_V_pos
+    {y : ℝ}
+    (hy : y ∈ Icc (block186LeftL : ℝ) (block186LeftR : ℝ))
+    (hy0ne : y ≠ 0)
+    (hy1ne : y ≠ (block186S1 : ℝ))
+    (hy2ne : y ≠ (block186S2 : ℝ))
+    (hy3ne : y ≠ (block186S3 : ℝ))
+    (hy4ne : y ≠ (block186S4 : ℝ)) :
+    0 < block186V y := by
+  have hcert := block186LeftCertificate_eq_true
+  unfold block186LeftCertificate at hcert
+  have hboxes := bool_left_of_and_eq_true hcert
+  have hcover := bool_right_of_and_eq_true hcert
+  exact ratPotential_pos_of_allBoxesValid_covers_sameParams
+    (boxes := block186LeftBoxes) (lo := block186LeftL) (hi := block186LeftR)
+    (w1 := block186W1) (w2 := block186W2) (w3 := block186W3) (w4 := block186W4)
+    (s1 := block186S1) (s2 := block186S2) (s3 := block186S3) (s4 := block186S4)
+    hboxes hcover block186LeftParamsCertificate_eq_true hy hy0ne hy1ne hy2ne hy3ne hy4ne
+
+def block186RightChunk000ParamsCertificate : Bool :=
+  allBoxesSameParams block186RightChunk000 block186W1 block186W2 block186W3 block186W4 block186S1 block186S2 block186S3 block186S4
+
+theorem block186RightChunk000ParamsCertificate_eq_true :
+    block186RightChunk000ParamsCertificate = true := by
+  native_decide
+
+theorem block186_right_chunk000_V_pos
+    {y : ℝ}
+    (hy : y ∈ Icc (block186RightChunk000L : ℝ) (block186RightChunk000R : ℝ))
+    (hy0ne : y ≠ 0)
+    (hy1ne : y ≠ (block186S1 : ℝ))
+    (hy2ne : y ≠ (block186S2 : ℝ))
+    (hy3ne : y ≠ (block186S3 : ℝ))
+    (hy4ne : y ≠ (block186S4 : ℝ)) :
+    0 < block186V y := by
+  have hcert := block186RightChunk000Certificate_eq_true
+  unfold block186RightChunk000Certificate at hcert
+  have hboxes := bool_left_of_and_eq_true hcert
+  have hcover := bool_right_of_and_eq_true hcert
+  exact ratPotential_pos_of_allBoxesValid_covers_sameParams
+    (boxes := block186RightChunk000) (lo := block186RightChunk000L) (hi := block186RightChunk000R)
+    (w1 := block186W1) (w2 := block186W2) (w3 := block186W3) (w4 := block186W4)
+    (s1 := block186S1) (s2 := block186S2) (s3 := block186S3) (s4 := block186S4)
+    hboxes hcover block186RightChunk000ParamsCertificate_eq_true hy hy0ne hy1ne hy2ne hy3ne hy4ne
+
+def block186RightChunk001ParamsCertificate : Bool :=
+  allBoxesSameParams block186RightChunk001 block186W1 block186W2 block186W3 block186W4 block186S1 block186S2 block186S3 block186S4
+
+theorem block186RightChunk001ParamsCertificate_eq_true :
+    block186RightChunk001ParamsCertificate = true := by
+  native_decide
+
+theorem block186_right_chunk001_V_pos
+    {y : ℝ}
+    (hy : y ∈ Icc (block186RightChunk001L : ℝ) (block186RightChunk001R : ℝ))
+    (hy0ne : y ≠ 0)
+    (hy1ne : y ≠ (block186S1 : ℝ))
+    (hy2ne : y ≠ (block186S2 : ℝ))
+    (hy3ne : y ≠ (block186S3 : ℝ))
+    (hy4ne : y ≠ (block186S4 : ℝ)) :
+    0 < block186V y := by
+  have hcert := block186RightChunk001Certificate_eq_true
+  unfold block186RightChunk001Certificate at hcert
+  have hboxes := bool_left_of_and_eq_true hcert
+  have hcover := bool_right_of_and_eq_true hcert
+  exact ratPotential_pos_of_allBoxesValid_covers_sameParams
+    (boxes := block186RightChunk001) (lo := block186RightChunk001L) (hi := block186RightChunk001R)
+    (w1 := block186W1) (w2 := block186W2) (w3 := block186W3) (w4 := block186W4)
+    (s1 := block186S1) (s2 := block186S2) (s3 := block186S3) (s4 := block186S4)
+    hboxes hcover block186RightChunk001ParamsCertificate_eq_true hy hy0ne hy1ne hy2ne hy3ne hy4ne
+
+theorem block186_right_V_pos
+    {y : ℝ}
+    (hy : y ∈ Icc (block186RightL : ℝ) (block186RightR : ℝ))
+    (hy0ne : y ≠ 0)
+    (hy1ne : y ≠ (block186S1 : ℝ))
+    (hy2ne : y ≠ (block186S2 : ℝ))
+    (hy3ne : y ≠ (block186S3 : ℝ))
+    (hy4ne : y ≠ (block186S4 : ℝ)) :
+    0 < block186V y := by
+  by_cases h0 : y ≤ (block186RightChunk000R : ℝ)
+  · have hyc : y ∈ Icc (block186RightChunk000L : ℝ) (block186RightChunk000R : ℝ) := by
+      have hL : (block186RightChunk000L : ℝ) = (block186RightL : ℝ) := by
+        norm_num [block186RightChunk000L, block186RightL]
+      constructor
+      · linarith [hy.1, hL]
+      · exact h0
+    exact block186_right_chunk000_V_pos hyc hy0ne hy1ne hy2ne hy3ne hy4ne
+  ·
+    have hprev : (block186RightChunk000R : ℝ) < y := lt_of_not_ge h0
+    have hL : (block186RightChunk001L : ℝ) = (block186RightChunk000R : ℝ) := by
+      norm_num [block186RightChunk001L, block186RightChunk000R]
+    have hR : (block186RightChunk001R : ℝ) = (block186RightR : ℝ) := by
+      norm_num [block186RightChunk001R, block186RightR]
+    have hyc : y ∈ Icc (block186RightChunk001L : ℝ) (block186RightChunk001R : ℝ) := by
+      constructor
+      · linarith [hprev, hL]
+      · linarith [hy.2, hR]
+    exact block186_right_chunk001_V_pos hyc hy0ne hy1ne hy2ne hy3ne hy4ne
+
+def block186_reallog_certificate : Prop :=
+  (∀ {y : ℝ}, y ∈ Icc (block186LeftL : ℝ) (block186LeftR : ℝ) →
+    y ≠ 0 → y ≠ (block186S1 : ℝ) → y ≠ (block186S2 : ℝ) →
+    y ≠ (block186S3 : ℝ) → y ≠ (block186S4 : ℝ) → 0 < block186V y) /\
+  (∀ {y : ℝ}, y ∈ Icc (block186RightL : ℝ) (block186RightR : ℝ) →
+    y ≠ 0 → y ≠ (block186S1 : ℝ) → y ≠ (block186S2 : ℝ) →
+    y ≠ (block186S3 : ℝ) → y ≠ (block186S4 : ℝ) → 0 < block186V y)
+
+theorem block186_reallog_certificate_proof :
+    block186_reallog_certificate := by
+  exact ⟨block186_left_V_pos, block186_right_V_pos⟩
+
+end Block186
+end M1817475
+end Erdos1038Lean
+
+#check Erdos1038Lean.M1817475.Block186.block186V
+#check Erdos1038Lean.M1817475.Block186.block186_left_V_pos
+#check Erdos1038Lean.M1817475.Block186.block186_right_V_pos
+#check Erdos1038Lean.M1817475.Block186.block186_reallog_certificate_proof

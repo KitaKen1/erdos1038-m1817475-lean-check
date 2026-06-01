@@ -4,8 +4,8 @@ Block 47 rational-manifest check for the M=1.817475 candidate.
 
 This checks the rational manifest layer for this block:
 box coverage, rational endpoint-distance bounds, and positivity
-of submitted lower-bound rationals.  It does not include the
-Mathlib Real.log bridge.
+of Lean-recomputed rational atanh/log lower-bound values.
+It does not include the Mathlib Real.log bridge.
 -/
 
 
@@ -81,11 +81,20 @@ def RatBox.validFastBool (b : RatBox) : Bool :=
 def RatBox.validComputedBool (b : RatBox) (nPos nNeg : Nat := 150) : Bool :=
   b.validFastBool && decide (b.LB = b.computedLower nPos nNeg)
 
-def allBoxesValid (boxes : List RatBox) : Bool :=
+def RatBox.validComputedPositiveBool (b : RatBox) (nPos nNeg : Nat := 150) : Bool :=
+  b.validFastBool && decide (0 < b.computedLower nPos nNeg)
+
+def allBoxesFastValid (boxes : List RatBox) : Bool :=
   boxes.all (fun b => b.validFastBool)
 
 def allBoxesComputedValid (boxes : List RatBox) (nPos nNeg : Nat := 150) : Bool :=
   boxes.all (fun b => b.validComputedBool nPos nNeg)
+
+def allBoxesComputedPositiveValid (boxes : List RatBox) (nPos nNeg : Nat := 150) : Bool :=
+  boxes.all (fun b => b.validComputedPositiveBool nPos nNeg)
+
+def allBoxesValid (boxes : List RatBox) : Bool :=
+  allBoxesComputedPositiveValid boxes 150 150
 
 def coversFromBool : List RatBox -> Rat -> Rat -> Bool
   | [], _lo, _hi => false

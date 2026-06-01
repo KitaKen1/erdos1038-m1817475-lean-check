@@ -1,0 +1,1141 @@
+import Erdos1038Lean.M1817475.Block000LogBridge
+import Erdos1038Lean.M1817475.Block001LogBridge
+import Erdos1038Lean.M1817475.Block002LogBridge
+import Erdos1038Lean.M1817475.Block003LogBridge
+import Erdos1038Lean.M1817475.Block004LogBridge
+import Erdos1038Lean.M1817475.Block005LogBridge
+import Erdos1038Lean.M1817475.Block006LogBridge
+import Erdos1038Lean.M1817475.Block007LogBridge
+import Erdos1038Lean.M1817475.Block008LogBridge
+import Erdos1038Lean.M1817475.Block009LogBridge
+import Erdos1038Lean.M1817475.Block010LogBridge
+import Erdos1038Lean.M1817475.Block011LogBridge
+import Erdos1038Lean.M1817475.Block012LogBridge
+import Erdos1038Lean.M1817475.Block013LogBridge
+import Erdos1038Lean.M1817475.Block014LogBridge
+import Erdos1038Lean.M1817475.Block015LogBridge
+import Erdos1038Lean.M1817475.Block016LogBridge
+import Erdos1038Lean.M1817475.Block017LogBridge
+import Erdos1038Lean.M1817475.Block018LogBridge
+import Erdos1038Lean.M1817475.Block019LogBridge
+import Erdos1038Lean.M1817475.Block020LogBridge
+import Erdos1038Lean.M1817475.Block021LogBridge
+import Erdos1038Lean.M1817475.Block022LogBridge
+import Erdos1038Lean.M1817475.Block023LogBridge
+import Erdos1038Lean.M1817475.Block024LogBridge
+import Erdos1038Lean.M1817475.Block025LogBridge
+import Erdos1038Lean.M1817475.Block026LogBridge
+import Erdos1038Lean.M1817475.Block027LogBridge
+import Erdos1038Lean.M1817475.Block028LogBridge
+import Erdos1038Lean.M1817475.Block029LogBridge
+import Erdos1038Lean.M1817475.Block030LogBridge
+import Erdos1038Lean.M1817475.Block031LogBridge
+import Erdos1038Lean.M1817475.Block032LogBridge
+import Erdos1038Lean.M1817475.Block033LogBridge
+import Erdos1038Lean.M1817475.Block034LogBridge
+import Erdos1038Lean.M1817475.Block035LogBridge
+import Erdos1038Lean.M1817475.Block036LogBridge
+import Erdos1038Lean.M1817475.Block037LogBridge
+import Erdos1038Lean.M1817475.Block038LogBridge
+import Erdos1038Lean.M1817475.Block039LogBridge
+import Erdos1038Lean.M1817475.Block040LogBridge
+import Erdos1038Lean.M1817475.Block041LogBridge
+import Erdos1038Lean.M1817475.Block042LogBridge
+import Erdos1038Lean.M1817475.Block043LogBridge
+import Erdos1038Lean.M1817475.Block044LogBridge
+import Erdos1038Lean.M1817475.Block045LogBridge
+import Erdos1038Lean.M1817475.Block046LogBridge
+import Erdos1038Lean.M1817475.Block047LogBridge
+import Erdos1038Lean.M1817475.Block048LogBridge
+import Erdos1038Lean.M1817475.Block049LogBridge
+import Erdos1038Lean.M1817475.Block050LogBridge
+import Erdos1038Lean.M1817475.Block051LogBridge
+import Erdos1038Lean.M1817475.Block052LogBridge
+import Erdos1038Lean.M1817475.Block053LogBridge
+import Erdos1038Lean.M1817475.Block054LogBridge
+import Erdos1038Lean.M1817475.Block055LogBridge
+import Erdos1038Lean.M1817475.Block056LogBridge
+import Erdos1038Lean.M1817475.Block057LogBridge
+import Erdos1038Lean.M1817475.Block058LogBridge
+import Erdos1038Lean.M1817475.Block059LogBridge
+import Erdos1038Lean.M1817475.Block060LogBridge
+import Erdos1038Lean.M1817475.Block061LogBridge
+import Erdos1038Lean.M1817475.Block062LogBridge
+import Erdos1038Lean.M1817475.Block063LogBridge
+import Erdos1038Lean.M1817475.Block064LogBridge
+import Erdos1038Lean.M1817475.Block065LogBridge
+import Erdos1038Lean.M1817475.Block066LogBridge
+import Erdos1038Lean.M1817475.Block067LogBridge
+import Erdos1038Lean.M1817475.Block068LogBridge
+import Erdos1038Lean.M1817475.Block069LogBridge
+import Erdos1038Lean.M1817475.Block070LogBridge
+import Erdos1038Lean.M1817475.Block071LogBridge
+import Erdos1038Lean.M1817475.Block072LogBridge
+import Erdos1038Lean.M1817475.Block073LogBridge
+import Erdos1038Lean.M1817475.Block074LogBridge
+import Erdos1038Lean.M1817475.Block075LogBridge
+import Erdos1038Lean.M1817475.Block076LogBridge
+import Erdos1038Lean.M1817475.Block077LogBridge
+import Erdos1038Lean.M1817475.Block078LogBridge
+import Erdos1038Lean.M1817475.Block079LogBridge
+import Erdos1038Lean.M1817475.Block080LogBridge
+import Erdos1038Lean.M1817475.Block081LogBridge
+import Erdos1038Lean.M1817475.Block082LogBridge
+import Erdos1038Lean.M1817475.Block083LogBridge
+import Erdos1038Lean.M1817475.Block084LogBridge
+import Erdos1038Lean.M1817475.Block085LogBridge
+import Erdos1038Lean.M1817475.Block086LogBridge
+import Erdos1038Lean.M1817475.Block087LogBridge
+import Erdos1038Lean.M1817475.Block088LogBridge
+import Erdos1038Lean.M1817475.Block089LogBridge
+import Erdos1038Lean.M1817475.Block090LogBridge
+import Erdos1038Lean.M1817475.Block091LogBridge
+import Erdos1038Lean.M1817475.Block092LogBridge
+import Erdos1038Lean.M1817475.Block093LogBridge
+import Erdos1038Lean.M1817475.Block094LogBridge
+import Erdos1038Lean.M1817475.Block095LogBridge
+import Erdos1038Lean.M1817475.Block096LogBridge
+import Erdos1038Lean.M1817475.Block097LogBridge
+import Erdos1038Lean.M1817475.Block098LogBridge
+import Erdos1038Lean.M1817475.Block099LogBridge
+import Erdos1038Lean.M1817475.Block100LogBridge
+import Erdos1038Lean.M1817475.Block101LogBridge
+import Erdos1038Lean.M1817475.Block102LogBridge
+import Erdos1038Lean.M1817475.Block103LogBridge
+import Erdos1038Lean.M1817475.Block104LogBridge
+import Erdos1038Lean.M1817475.Block105LogBridge
+import Erdos1038Lean.M1817475.Block106LogBridge
+import Erdos1038Lean.M1817475.Block107LogBridge
+import Erdos1038Lean.M1817475.Block108LogBridge
+import Erdos1038Lean.M1817475.Block109LogBridge
+import Erdos1038Lean.M1817475.Block110LogBridge
+import Erdos1038Lean.M1817475.Block111LogBridge
+import Erdos1038Lean.M1817475.Block112LogBridge
+import Erdos1038Lean.M1817475.Block113LogBridge
+import Erdos1038Lean.M1817475.Block114LogBridge
+import Erdos1038Lean.M1817475.Block115LogBridge
+import Erdos1038Lean.M1817475.Block116LogBridge
+import Erdos1038Lean.M1817475.Block117LogBridge
+import Erdos1038Lean.M1817475.Block118LogBridge
+import Erdos1038Lean.M1817475.Block119LogBridge
+import Erdos1038Lean.M1817475.Block120LogBridge
+import Erdos1038Lean.M1817475.Block121LogBridge
+import Erdos1038Lean.M1817475.Block122LogBridge
+import Erdos1038Lean.M1817475.Block123LogBridge
+import Erdos1038Lean.M1817475.Block124LogBridge
+import Erdos1038Lean.M1817475.Block125LogBridge
+import Erdos1038Lean.M1817475.Block126LogBridge
+import Erdos1038Lean.M1817475.Block127LogBridge
+import Erdos1038Lean.M1817475.Block128LogBridge
+import Erdos1038Lean.M1817475.Block129LogBridge
+import Erdos1038Lean.M1817475.Block130LogBridge
+import Erdos1038Lean.M1817475.Block131LogBridge
+import Erdos1038Lean.M1817475.Block132LogBridge
+import Erdos1038Lean.M1817475.Block133LogBridge
+import Erdos1038Lean.M1817475.Block134LogBridge
+import Erdos1038Lean.M1817475.Block135LogBridge
+import Erdos1038Lean.M1817475.Block136LogBridge
+import Erdos1038Lean.M1817475.Block137LogBridge
+import Erdos1038Lean.M1817475.Block138LogBridge
+import Erdos1038Lean.M1817475.Block139LogBridge
+import Erdos1038Lean.M1817475.Block140LogBridge
+import Erdos1038Lean.M1817475.Block141LogBridge
+import Erdos1038Lean.M1817475.Block142LogBridge
+import Erdos1038Lean.M1817475.Block143LogBridge
+import Erdos1038Lean.M1817475.Block144LogBridge
+import Erdos1038Lean.M1817475.Block145LogBridge
+import Erdos1038Lean.M1817475.Block146LogBridge
+import Erdos1038Lean.M1817475.Block147LogBridge
+import Erdos1038Lean.M1817475.Block148LogBridge
+import Erdos1038Lean.M1817475.Block149LogBridge
+import Erdos1038Lean.M1817475.Block150LogBridge
+import Erdos1038Lean.M1817475.Block151LogBridge
+import Erdos1038Lean.M1817475.Block152LogBridge
+import Erdos1038Lean.M1817475.Block153LogBridge
+import Erdos1038Lean.M1817475.Block154LogBridge
+import Erdos1038Lean.M1817475.Block155LogBridge
+import Erdos1038Lean.M1817475.Block156LogBridge
+import Erdos1038Lean.M1817475.Block157LogBridge
+import Erdos1038Lean.M1817475.Block158LogBridge
+import Erdos1038Lean.M1817475.Block159LogBridge
+import Erdos1038Lean.M1817475.Block160LogBridge
+import Erdos1038Lean.M1817475.Block161LogBridge
+import Erdos1038Lean.M1817475.Block162LogBridge
+import Erdos1038Lean.M1817475.Block163LogBridge
+import Erdos1038Lean.M1817475.Block164LogBridge
+import Erdos1038Lean.M1817475.Block165LogBridge
+import Erdos1038Lean.M1817475.Block166LogBridge
+import Erdos1038Lean.M1817475.Block167LogBridge
+import Erdos1038Lean.M1817475.Block168LogBridge
+import Erdos1038Lean.M1817475.Block169LogBridge
+import Erdos1038Lean.M1817475.Block170LogBridge
+import Erdos1038Lean.M1817475.Block171LogBridge
+import Erdos1038Lean.M1817475.Block172LogBridge
+import Erdos1038Lean.M1817475.Block173LogBridge
+import Erdos1038Lean.M1817475.Block174LogBridge
+import Erdos1038Lean.M1817475.Block175LogBridge
+import Erdos1038Lean.M1817475.Block176LogBridge
+import Erdos1038Lean.M1817475.Block177LogBridge
+import Erdos1038Lean.M1817475.Block178LogBridge
+import Erdos1038Lean.M1817475.Block179LogBridge
+import Erdos1038Lean.M1817475.Block180LogBridge
+import Erdos1038Lean.M1817475.Block181LogBridge
+import Erdos1038Lean.M1817475.Block182LogBridge
+import Erdos1038Lean.M1817475.Block183LogBridge
+import Erdos1038Lean.M1817475.Block184LogBridge
+import Erdos1038Lean.M1817475.Block185LogBridge
+import Erdos1038Lean.M1817475.Block186LogBridge
+import Erdos1038Lean.M1817475.Block187LogBridge
+import Erdos1038Lean.M1817475.Block188LogBridge
+import Erdos1038Lean.M1817475.Block189LogBridge
+import Erdos1038Lean.M1817475.Block190LogBridge
+import Erdos1038Lean.M1817475.Block191LogBridge
+import Erdos1038Lean.M1817475.Block192LogBridge
+import Erdos1038Lean.M1817475.Block193LogBridge
+import Erdos1038Lean.M1817475.Block194LogBridge
+import Erdos1038Lean.M1817475.Block195LogBridge
+import Erdos1038Lean.M1817475.Block196LogBridge
+import Erdos1038Lean.M1817475.Block197LogBridge
+import Erdos1038Lean.M1817475.Block198LogBridge
+import Erdos1038Lean.M1817475.Block199LogBridge
+import Erdos1038Lean.M1817475.Block200LogBridge
+import Erdos1038Lean.M1817475.Block201LogBridge
+import Erdos1038Lean.M1817475.Block202LogBridge
+import Erdos1038Lean.M1817475.Block203LogBridge
+import Erdos1038Lean.M1817475.Block204LogBridge
+import Erdos1038Lean.M1817475.Block205LogBridge
+import Erdos1038Lean.M1817475.Block206LogBridge
+import Erdos1038Lean.M1817475.Block207LogBridge
+import Erdos1038Lean.M1817475.Block208LogBridge
+import Erdos1038Lean.M1817475.Block209LogBridge
+import Erdos1038Lean.M1817475.Block210LogBridge
+import Erdos1038Lean.M1817475.Block211LogBridge
+import Erdos1038Lean.M1817475.Block212LogBridge
+import Erdos1038Lean.M1817475.Block213LogBridge
+import Erdos1038Lean.M1817475.Block214LogBridge
+import Erdos1038Lean.M1817475.Block215LogBridge
+import Erdos1038Lean.M1817475.Block216LogBridge
+import Erdos1038Lean.M1817475.Block217LogBridge
+import Erdos1038Lean.M1817475.Block218LogBridge
+import Erdos1038Lean.M1817475.Block219LogBridge
+import Erdos1038Lean.M1817475.Block220LogBridge
+import Erdos1038Lean.M1817475.Block221LogBridge
+import Erdos1038Lean.M1817475.Block222LogBridge
+import Erdos1038Lean.M1817475.Block223LogBridge
+import Erdos1038Lean.M1817475.Block224LogBridge
+import Erdos1038Lean.M1817475.Block225LogBridge
+import Erdos1038Lean.M1817475.Block226LogBridge
+import Erdos1038Lean.M1817475.Block227LogBridge
+import Erdos1038Lean.M1817475.Block228LogBridge
+import Erdos1038Lean.M1817475.Block229LogBridge
+import Erdos1038Lean.M1817475.Block230LogBridge
+import Erdos1038Lean.M1817475.Block231LogBridge
+import Erdos1038Lean.M1817475.Block232LogBridge
+import Erdos1038Lean.M1817475.Block233LogBridge
+import Erdos1038Lean.M1817475.Block234LogBridge
+import Erdos1038Lean.M1817475.Block235LogBridge
+import Erdos1038Lean.M1817475.Block236LogBridge
+import Erdos1038Lean.M1817475.Block237LogBridge
+import Erdos1038Lean.M1817475.Block238LogBridge
+import Erdos1038Lean.M1817475.Block239LogBridge
+import Erdos1038Lean.M1817475.Block240LogBridge
+import Erdos1038Lean.M1817475.Block241LogBridge
+import Erdos1038Lean.M1817475.Block242LogBridge
+import Erdos1038Lean.M1817475.Block243LogBridge
+import Erdos1038Lean.M1817475.Block244LogBridge
+import Erdos1038Lean.M1817475.Block245LogBridge
+import Erdos1038Lean.M1817475.Block246LogBridge
+import Erdos1038Lean.M1817475.Block247LogBridge
+import Erdos1038Lean.M1817475.Block248LogBridge
+import Erdos1038Lean.M1817475.Block249LogBridge
+import Erdos1038Lean.M1817475.Block250LogBridge
+import Erdos1038Lean.M1817475.Block251LogBridge
+import Erdos1038Lean.M1817475.Block252LogBridge
+import Erdos1038Lean.M1817475.Block253LogBridge
+import Erdos1038Lean.M1817475.Block254LogBridge
+import Erdos1038Lean.M1817475.Block255LogBridge
+import Erdos1038Lean.M1817475.Block256LogBridge
+import Erdos1038Lean.M1817475.Block257LogBridge
+import Erdos1038Lean.M1817475.Block258LogBridge
+import Erdos1038Lean.M1817475.Block259LogBridge
+import Erdos1038Lean.M1817475.Block260LogBridge
+import Erdos1038Lean.M1817475.Block261LogBridge
+import Erdos1038Lean.M1817475.Block262LogBridge
+import Erdos1038Lean.M1817475.Block263LogBridge
+import Erdos1038Lean.M1817475.Block264LogBridge
+import Erdos1038Lean.M1817475.Block265LogBridge
+import Erdos1038Lean.M1817475.Block266LogBridge
+import Erdos1038Lean.M1817475.Block267LogBridge
+import Erdos1038Lean.M1817475.Block268LogBridge
+import Erdos1038Lean.M1817475.Block269LogBridge
+import Erdos1038Lean.M1817475.Block270LogBridge
+import Erdos1038Lean.M1817475.Block271LogBridge
+import Erdos1038Lean.M1817475.Block272LogBridge
+import Erdos1038Lean.M1817475.Block273LogBridge
+import Erdos1038Lean.M1817475.Block274LogBridge
+import Erdos1038Lean.M1817475.Block275LogBridge
+import Erdos1038Lean.M1817475.Block276LogBridge
+import Erdos1038Lean.M1817475.Block277LogBridge
+import Erdos1038Lean.M1817475.Block278LogBridge
+import Erdos1038Lean.M1817475.Block279LogBridge
+import Erdos1038Lean.M1817475.Block280LogBridge
+import Erdos1038Lean.M1817475.Block281LogBridge
+import Erdos1038Lean.M1817475.Block282LogBridge
+import Erdos1038Lean.M1817475.Block283LogBridge
+import Erdos1038Lean.M1817475.Block284LogBridge
+import Erdos1038Lean.M1817475.Block285LogBridge
+import Erdos1038Lean.M1817475.Block286LogBridge
+import Erdos1038Lean.M1817475.Block287LogBridge
+import Erdos1038Lean.M1817475.Block288LogBridge
+import Erdos1038Lean.M1817475.Block289LogBridge
+import Erdos1038Lean.M1817475.Block290LogBridge
+import Erdos1038Lean.M1817475.Block291LogBridge
+import Erdos1038Lean.M1817475.Block292LogBridge
+import Erdos1038Lean.M1817475.Block293LogBridge
+import Erdos1038Lean.M1817475.Block294LogBridge
+import Erdos1038Lean.M1817475.Block295LogBridge
+import Erdos1038Lean.M1817475.Block296LogBridge
+import Erdos1038Lean.M1817475.Block297LogBridge
+import Erdos1038Lean.M1817475.Block298LogBridge
+import Erdos1038Lean.M1817475.Block299LogBridge
+import Erdos1038Lean.M1817475.Block300LogBridge
+import Erdos1038Lean.M1817475.Block301LogBridge
+import Erdos1038Lean.M1817475.Block302LogBridge
+import Erdos1038Lean.M1817475.Block303LogBridge
+import Erdos1038Lean.M1817475.Block304LogBridge
+import Erdos1038Lean.M1817475.Block305LogBridge
+import Erdos1038Lean.M1817475.Block306LogBridge
+import Erdos1038Lean.M1817475.Block307LogBridge
+import Erdos1038Lean.M1817475.Block308LogBridge
+import Erdos1038Lean.M1817475.Block309LogBridge
+import Erdos1038Lean.M1817475.Block310LogBridge
+import Erdos1038Lean.M1817475.Block311LogBridge
+import Erdos1038Lean.M1817475.Block312LogBridge
+import Erdos1038Lean.M1817475.Block313LogBridge
+import Erdos1038Lean.M1817475.Block314LogBridge
+import Erdos1038Lean.M1817475.Block315LogBridge
+import Erdos1038Lean.M1817475.Block316LogBridge
+import Erdos1038Lean.M1817475.Block317LogBridge
+import Erdos1038Lean.M1817475.Block318LogBridge
+import Erdos1038Lean.M1817475.Block319LogBridge
+import Erdos1038Lean.M1817475.Block320LogBridge
+import Erdos1038Lean.M1817475.Block321LogBridge
+import Erdos1038Lean.M1817475.Block322LogBridge
+import Erdos1038Lean.M1817475.Block323LogBridge
+import Erdos1038Lean.M1817475.Block324LogBridge
+import Erdos1038Lean.M1817475.Block325LogBridge
+import Erdos1038Lean.M1817475.Block326LogBridge
+import Erdos1038Lean.M1817475.Block327LogBridge
+import Erdos1038Lean.M1817475.Block328LogBridge
+import Erdos1038Lean.M1817475.Block329LogBridge
+import Erdos1038Lean.M1817475.Block330LogBridge
+import Erdos1038Lean.M1817475.Block331LogBridge
+import Erdos1038Lean.M1817475.Block332LogBridge
+import Erdos1038Lean.M1817475.Block333LogBridge
+import Erdos1038Lean.M1817475.Block334LogBridge
+import Erdos1038Lean.M1817475.Block335LogBridge
+import Erdos1038Lean.M1817475.Block336LogBridge
+import Erdos1038Lean.M1817475.Block337LogBridge
+import Erdos1038Lean.M1817475.Block338LogBridge
+import Erdos1038Lean.M1817475.Block339LogBridge
+import Erdos1038Lean.M1817475.Block340LogBridge
+import Erdos1038Lean.M1817475.Block341LogBridge
+import Erdos1038Lean.M1817475.Block342LogBridge
+import Erdos1038Lean.M1817475.Block343LogBridge
+import Erdos1038Lean.M1817475.Block344LogBridge
+import Erdos1038Lean.M1817475.Block345LogBridge
+import Erdos1038Lean.M1817475.Block346LogBridge
+import Erdos1038Lean.M1817475.Block347LogBridge
+import Erdos1038Lean.M1817475.Block348LogBridge
+import Erdos1038Lean.M1817475.Block349LogBridge
+import Erdos1038Lean.M1817475.Block350LogBridge
+import Erdos1038Lean.M1817475.Block351LogBridge
+import Erdos1038Lean.M1817475.Block352LogBridge
+import Erdos1038Lean.M1817475.Block353LogBridge
+import Erdos1038Lean.M1817475.Block354LogBridge
+import Erdos1038Lean.M1817475.Block355LogBridge
+import Erdos1038Lean.M1817475.Block356LogBridge
+import Erdos1038Lean.M1817475.Block357LogBridge
+import Erdos1038Lean.M1817475.Block358LogBridge
+import Erdos1038Lean.M1817475.Block359LogBridge
+import Erdos1038Lean.M1817475.Block360LogBridge
+import Erdos1038Lean.M1817475.Block361LogBridge
+import Erdos1038Lean.M1817475.Block362LogBridge
+import Erdos1038Lean.M1817475.Block363LogBridge
+import Erdos1038Lean.M1817475.Block364LogBridge
+import Erdos1038Lean.M1817475.Block365LogBridge
+import Erdos1038Lean.M1817475.Block366LogBridge
+import Erdos1038Lean.M1817475.Block367LogBridge
+import Erdos1038Lean.M1817475.Block368LogBridge
+import Erdos1038Lean.M1817475.Block369LogBridge
+import Erdos1038Lean.M1817475.Block370LogBridge
+import Erdos1038Lean.M1817475.Block371LogBridge
+import Erdos1038Lean.M1817475.Block372LogBridge
+import Erdos1038Lean.M1817475.Block373LogBridge
+import Erdos1038Lean.M1817475.Block374LogBridge
+import Erdos1038Lean.M1817475.Block375LogBridge
+import Erdos1038Lean.M1817475.Block376LogBridge
+import Erdos1038Lean.M1817475.Block377LogBridge
+import Erdos1038Lean.M1817475.Block378LogBridge
+import Erdos1038Lean.M1817475.Block379LogBridge
+import Erdos1038Lean.M1817475.Block380LogBridge
+import Erdos1038Lean.M1817475.Block381LogBridge
+import Erdos1038Lean.M1817475.Block382LogBridge
+import Erdos1038Lean.M1817475.Block383LogBridge
+import Erdos1038Lean.M1817475.Block384LogBridge
+import Erdos1038Lean.M1817475.Block385LogBridge
+import Erdos1038Lean.M1817475.Block386LogBridge
+import Erdos1038Lean.M1817475.Block387LogBridge
+import Erdos1038Lean.M1817475.Block388LogBridge
+import Erdos1038Lean.M1817475.Block389LogBridge
+import Erdos1038Lean.M1817475.Block390LogBridge
+import Erdos1038Lean.M1817475.Block391LogBridge
+import Erdos1038Lean.M1817475.Block392LogBridge
+import Erdos1038Lean.M1817475.Block393LogBridge
+import Erdos1038Lean.M1817475.Block394LogBridge
+import Erdos1038Lean.M1817475.Block395LogBridge
+import Erdos1038Lean.M1817475.Block396LogBridge
+import Erdos1038Lean.M1817475.Block397LogBridge
+import Erdos1038Lean.M1817475.Block398LogBridge
+import Erdos1038Lean.M1817475.Block399LogBridge
+import Erdos1038Lean.M1817475.Block400LogBridge
+import Erdos1038Lean.M1817475.Block401LogBridge
+import Erdos1038Lean.M1817475.Block402LogBridge
+import Erdos1038Lean.M1817475.Block403LogBridge
+import Erdos1038Lean.M1817475.Block404LogBridge
+import Erdos1038Lean.M1817475.Block405LogBridge
+import Erdos1038Lean.M1817475.Block406LogBridge
+import Erdos1038Lean.M1817475.Block407LogBridge
+import Erdos1038Lean.M1817475.Block408LogBridge
+import Erdos1038Lean.M1817475.Block409LogBridge
+import Erdos1038Lean.M1817475.Block410LogBridge
+import Erdos1038Lean.M1817475.Block411LogBridge
+import Erdos1038Lean.M1817475.Block412LogBridge
+import Erdos1038Lean.M1817475.Block413LogBridge
+import Erdos1038Lean.M1817475.Block414LogBridge
+import Erdos1038Lean.M1817475.Block415LogBridge
+import Erdos1038Lean.M1817475.Block416LogBridge
+import Erdos1038Lean.M1817475.Block417LogBridge
+import Erdos1038Lean.M1817475.Block418LogBridge
+import Erdos1038Lean.M1817475.Block419LogBridge
+import Erdos1038Lean.M1817475.Block420LogBridge
+import Erdos1038Lean.M1817475.Block421LogBridge
+import Erdos1038Lean.M1817475.Block422LogBridge
+import Erdos1038Lean.M1817475.Block423LogBridge
+import Erdos1038Lean.M1817475.Block424LogBridge
+import Erdos1038Lean.M1817475.Block425LogBridge
+import Erdos1038Lean.M1817475.Block426LogBridge
+import Erdos1038Lean.M1817475.Block427LogBridge
+import Erdos1038Lean.M1817475.Block428LogBridge
+import Erdos1038Lean.M1817475.Block429LogBridge
+import Erdos1038Lean.M1817475.Block430LogBridge
+import Erdos1038Lean.M1817475.Block431LogBridge
+import Erdos1038Lean.M1817475.Block432LogBridge
+import Erdos1038Lean.M1817475.Block433LogBridge
+import Erdos1038Lean.M1817475.Block434LogBridge
+import Erdos1038Lean.M1817475.Block435LogBridge
+import Erdos1038Lean.M1817475.Block436LogBridge
+import Erdos1038Lean.M1817475.Block437LogBridge
+import Erdos1038Lean.M1817475.Block438LogBridge
+import Erdos1038Lean.M1817475.Block439LogBridge
+import Erdos1038Lean.M1817475.Block440LogBridge
+import Erdos1038Lean.M1817475.Block441LogBridge
+import Erdos1038Lean.M1817475.Block442LogBridge
+import Erdos1038Lean.M1817475.Block443LogBridge
+import Erdos1038Lean.M1817475.Block444LogBridge
+import Erdos1038Lean.M1817475.Block445LogBridge
+import Erdos1038Lean.M1817475.Block446LogBridge
+import Erdos1038Lean.M1817475.Block447LogBridge
+import Erdos1038Lean.M1817475.Block448LogBridge
+import Erdos1038Lean.M1817475.Block449LogBridge
+import Erdos1038Lean.M1817475.Block450LogBridge
+import Erdos1038Lean.M1817475.Block451LogBridge
+import Erdos1038Lean.M1817475.Block452LogBridge
+import Erdos1038Lean.M1817475.Block453LogBridge
+import Erdos1038Lean.M1817475.Block454LogBridge
+import Erdos1038Lean.M1817475.Block455LogBridge
+import Erdos1038Lean.M1817475.Block456LogBridge
+import Erdos1038Lean.M1817475.Block457LogBridge
+import Erdos1038Lean.M1817475.Block458LogBridge
+import Erdos1038Lean.M1817475.Block459LogBridge
+import Erdos1038Lean.M1817475.Block460LogBridge
+import Erdos1038Lean.M1817475.Block461LogBridge
+import Erdos1038Lean.M1817475.Block462LogBridge
+import Erdos1038Lean.M1817475.Block463LogBridge
+import Erdos1038Lean.M1817475.Block464LogBridge
+import Erdos1038Lean.M1817475.Block465LogBridge
+import Erdos1038Lean.M1817475.Block466LogBridge
+import Erdos1038Lean.M1817475.Block467LogBridge
+import Erdos1038Lean.M1817475.Block468LogBridge
+import Erdos1038Lean.M1817475.Block469LogBridge
+import Erdos1038Lean.M1817475.Block470LogBridge
+import Erdos1038Lean.M1817475.Block471LogBridge
+import Erdos1038Lean.M1817475.Block472LogBridge
+import Erdos1038Lean.M1817475.Block473LogBridge
+import Erdos1038Lean.M1817475.Block474LogBridge
+import Erdos1038Lean.M1817475.Block475LogBridge
+import Erdos1038Lean.M1817475.Block476LogBridge
+import Erdos1038Lean.M1817475.Block477LogBridge
+import Erdos1038Lean.M1817475.Block478LogBridge
+import Erdos1038Lean.M1817475.Block479LogBridge
+import Erdos1038Lean.M1817475.Block480LogBridge
+import Erdos1038Lean.M1817475.Block481LogBridge
+import Erdos1038Lean.M1817475.Block482LogBridge
+import Erdos1038Lean.M1817475.Block483LogBridge
+import Erdos1038Lean.M1817475.Block484LogBridge
+import Erdos1038Lean.M1817475.Block485LogBridge
+import Erdos1038Lean.M1817475.Block486LogBridge
+import Erdos1038Lean.M1817475.Block487LogBridge
+import Erdos1038Lean.M1817475.Block488LogBridge
+import Erdos1038Lean.M1817475.Block489LogBridge
+import Erdos1038Lean.M1817475.Block490LogBridge
+import Erdos1038Lean.M1817475.Block491LogBridge
+import Erdos1038Lean.M1817475.Block492LogBridge
+import Erdos1038Lean.M1817475.Block493LogBridge
+import Erdos1038Lean.M1817475.Block494LogBridge
+import Erdos1038Lean.M1817475.Block495LogBridge
+import Erdos1038Lean.M1817475.Block496LogBridge
+import Erdos1038Lean.M1817475.Block497LogBridge
+import Erdos1038Lean.M1817475.Block498LogBridge
+import Erdos1038Lean.M1817475.Block499LogBridge
+import Erdos1038Lean.M1817475.Block500LogBridge
+import Erdos1038Lean.M1817475.Block501LogBridge
+import Erdos1038Lean.M1817475.Block502LogBridge
+import Erdos1038Lean.M1817475.Block503LogBridge
+import Erdos1038Lean.M1817475.Block504LogBridge
+import Erdos1038Lean.M1817475.Block505LogBridge
+import Erdos1038Lean.M1817475.Block506LogBridge
+import Erdos1038Lean.M1817475.Block507LogBridge
+import Erdos1038Lean.M1817475.Block508LogBridge
+import Erdos1038Lean.M1817475.Block509LogBridge
+import Erdos1038Lean.M1817475.Block510LogBridge
+import Erdos1038Lean.M1817475.Block511LogBridge
+import Erdos1038Lean.M1817475.Block512LogBridge
+import Erdos1038Lean.M1817475.Block513LogBridge
+import Erdos1038Lean.M1817475.Block514LogBridge
+import Erdos1038Lean.M1817475.Block515LogBridge
+import Erdos1038Lean.M1817475.Block516LogBridge
+import Erdos1038Lean.M1817475.Block517LogBridge
+import Erdos1038Lean.M1817475.Block518LogBridge
+import Erdos1038Lean.M1817475.Block519LogBridge
+import Erdos1038Lean.M1817475.Block520LogBridge
+import Erdos1038Lean.M1817475.Block521LogBridge
+import Erdos1038Lean.M1817475.Block522LogBridge
+import Erdos1038Lean.M1817475.Block523LogBridge
+import Erdos1038Lean.M1817475.Block524LogBridge
+import Erdos1038Lean.M1817475.Block525LogBridge
+import Erdos1038Lean.M1817475.Block526LogBridge
+import Erdos1038Lean.M1817475.Block527LogBridge
+import Erdos1038Lean.M1817475.Block528LogBridge
+import Erdos1038Lean.M1817475.Block529LogBridge
+import Erdos1038Lean.M1817475.Block530LogBridge
+import Erdos1038Lean.M1817475.Block531LogBridge
+import Erdos1038Lean.M1817475.Block532LogBridge
+import Erdos1038Lean.M1817475.Block533LogBridge
+import Erdos1038Lean.M1817475.Block534LogBridge
+import Erdos1038Lean.M1817475.Block535LogBridge
+import Erdos1038Lean.M1817475.Block536LogBridge
+import Erdos1038Lean.M1817475.Block537LogBridge
+import Erdos1038Lean.M1817475.Block538LogBridge
+import Erdos1038Lean.M1817475.Block539LogBridge
+import Erdos1038Lean.M1817475.Block540LogBridge
+import Erdos1038Lean.M1817475.Block541LogBridge
+import Erdos1038Lean.M1817475.Block542LogBridge
+import Erdos1038Lean.M1817475.Block543LogBridge
+import Erdos1038Lean.M1817475.Block544LogBridge
+import Erdos1038Lean.M1817475.Block545LogBridge
+import Erdos1038Lean.M1817475.Block546LogBridge
+import Erdos1038Lean.M1817475.Block547LogBridge
+import Erdos1038Lean.M1817475.Block548LogBridge
+import Erdos1038Lean.M1817475.Block549LogBridge
+import Erdos1038Lean.M1817475.Block550LogBridge
+import Erdos1038Lean.M1817475.Block551LogBridge
+import Erdos1038Lean.M1817475.Block552LogBridge
+import Erdos1038Lean.M1817475.Block553LogBridge
+import Erdos1038Lean.M1817475.Block554LogBridge
+import Erdos1038Lean.M1817475.Block555LogBridge
+import Erdos1038Lean.M1817475.Block556LogBridge
+import Erdos1038Lean.M1817475.Block557LogBridge
+import Erdos1038Lean.M1817475.Block558LogBridge
+import Erdos1038Lean.M1817475.Block559LogBridge
+
+set_option maxHeartbeats 0
+set_option maxRecDepth 100000
+
+namespace Erdos1038Lean
+namespace M1817475
+
+/-- Aggregate real-log positivity certificate for the 560 generated blocks.
+
+This proves the block-level logarithmic-potential positivity statements
+for the generated finite-atom certificate, away from singular atom
+locations.  It is still downstream of the normalized-support reduction.
+-/
+def all560_reallog_certificate : Prop :=
+    Block000.block000_reallog_certificate /\
+    Block001.block001_reallog_certificate /\
+    Block002.block002_reallog_certificate /\
+    Block003.block003_reallog_certificate /\
+    Block004.block004_reallog_certificate /\
+    Block005.block005_reallog_certificate /\
+    Block006.block006_reallog_certificate /\
+    Block007.block007_reallog_certificate /\
+    Block008.block008_reallog_certificate /\
+    Block009.block009_reallog_certificate /\
+    Block010.block010_reallog_certificate /\
+    Block011.block011_reallog_certificate /\
+    Block012.block012_reallog_certificate /\
+    Block013.block013_reallog_certificate /\
+    Block014.block014_reallog_certificate /\
+    Block015.block015_reallog_certificate /\
+    Block016.block016_reallog_certificate /\
+    Block017.block017_reallog_certificate /\
+    Block018.block018_reallog_certificate /\
+    Block019.block019_reallog_certificate /\
+    Block020.block020_reallog_certificate /\
+    Block021.block021_reallog_certificate /\
+    Block022.block022_reallog_certificate /\
+    Block023.block023_reallog_certificate /\
+    Block024.block024_reallog_certificate /\
+    Block025.block025_reallog_certificate /\
+    Block026.block026_reallog_certificate /\
+    Block027.block027_reallog_certificate /\
+    Block028.block028_reallog_certificate /\
+    Block029.block029_reallog_certificate /\
+    Block030.block030_reallog_certificate /\
+    Block031.block031_reallog_certificate /\
+    Block032.block032_reallog_certificate /\
+    Block033.block033_reallog_certificate /\
+    Block034.block034_reallog_certificate /\
+    Block035.block035_reallog_certificate /\
+    Block036.block036_reallog_certificate /\
+    Block037.block037_reallog_certificate /\
+    Block038.block038_reallog_certificate /\
+    Block039.block039_reallog_certificate /\
+    Block040.block040_reallog_certificate /\
+    Block041.block041_reallog_certificate /\
+    Block042.block042_reallog_certificate /\
+    Block043.block043_reallog_certificate /\
+    Block044.block044_reallog_certificate /\
+    Block045.block045_reallog_certificate /\
+    Block046.block046_reallog_certificate /\
+    Block047.block047_reallog_certificate /\
+    Block048.block048_reallog_certificate /\
+    Block049.block049_reallog_certificate /\
+    Block050.block050_reallog_certificate /\
+    Block051.block051_reallog_certificate /\
+    Block052.block052_reallog_certificate /\
+    Block053.block053_reallog_certificate /\
+    Block054.block054_reallog_certificate /\
+    Block055.block055_reallog_certificate /\
+    Block056.block056_reallog_certificate /\
+    Block057.block057_reallog_certificate /\
+    Block058.block058_reallog_certificate /\
+    Block059.block059_reallog_certificate /\
+    Block060.block060_reallog_certificate /\
+    Block061.block061_reallog_certificate /\
+    Block062.block062_reallog_certificate /\
+    Block063.block063_reallog_certificate /\
+    Block064.block064_reallog_certificate /\
+    Block065.block065_reallog_certificate /\
+    Block066.block066_reallog_certificate /\
+    Block067.block067_reallog_certificate /\
+    Block068.block068_reallog_certificate /\
+    Block069.block069_reallog_certificate /\
+    Block070.block070_reallog_certificate /\
+    Block071.block071_reallog_certificate /\
+    Block072.block072_reallog_certificate /\
+    Block073.block073_reallog_certificate /\
+    Block074.block074_reallog_certificate /\
+    Block075.block075_reallog_certificate /\
+    Block076.block076_reallog_certificate /\
+    Block077.block077_reallog_certificate /\
+    Block078.block078_reallog_certificate /\
+    Block079.block079_reallog_certificate /\
+    Block080.block080_reallog_certificate /\
+    Block081.block081_reallog_certificate /\
+    Block082.block082_reallog_certificate /\
+    Block083.block083_reallog_certificate /\
+    Block084.block084_reallog_certificate /\
+    Block085.block085_reallog_certificate /\
+    Block086.block086_reallog_certificate /\
+    Block087.block087_reallog_certificate /\
+    Block088.block088_reallog_certificate /\
+    Block089.block089_reallog_certificate /\
+    Block090.block090_reallog_certificate /\
+    Block091.block091_reallog_certificate /\
+    Block092.block092_reallog_certificate /\
+    Block093.block093_reallog_certificate /\
+    Block094.block094_reallog_certificate /\
+    Block095.block095_reallog_certificate /\
+    Block096.block096_reallog_certificate /\
+    Block097.block097_reallog_certificate /\
+    Block098.block098_reallog_certificate /\
+    Block099.block099_reallog_certificate /\
+    Block100.block100_reallog_certificate /\
+    Block101.block101_reallog_certificate /\
+    Block102.block102_reallog_certificate /\
+    Block103.block103_reallog_certificate /\
+    Block104.block104_reallog_certificate /\
+    Block105.block105_reallog_certificate /\
+    Block106.block106_reallog_certificate /\
+    Block107.block107_reallog_certificate /\
+    Block108.block108_reallog_certificate /\
+    Block109.block109_reallog_certificate /\
+    Block110.block110_reallog_certificate /\
+    Block111.block111_reallog_certificate /\
+    Block112.block112_reallog_certificate /\
+    Block113.block113_reallog_certificate /\
+    Block114.block114_reallog_certificate /\
+    Block115.block115_reallog_certificate /\
+    Block116.block116_reallog_certificate /\
+    Block117.block117_reallog_certificate /\
+    Block118.block118_reallog_certificate /\
+    Block119.block119_reallog_certificate /\
+    Block120.block120_reallog_certificate /\
+    Block121.block121_reallog_certificate /\
+    Block122.block122_reallog_certificate /\
+    Block123.block123_reallog_certificate /\
+    Block124.block124_reallog_certificate /\
+    Block125.block125_reallog_certificate /\
+    Block126.block126_reallog_certificate /\
+    Block127.block127_reallog_certificate /\
+    Block128.block128_reallog_certificate /\
+    Block129.block129_reallog_certificate /\
+    Block130.block130_reallog_certificate /\
+    Block131.block131_reallog_certificate /\
+    Block132.block132_reallog_certificate /\
+    Block133.block133_reallog_certificate /\
+    Block134.block134_reallog_certificate /\
+    Block135.block135_reallog_certificate /\
+    Block136.block136_reallog_certificate /\
+    Block137.block137_reallog_certificate /\
+    Block138.block138_reallog_certificate /\
+    Block139.block139_reallog_certificate /\
+    Block140.block140_reallog_certificate /\
+    Block141.block141_reallog_certificate /\
+    Block142.block142_reallog_certificate /\
+    Block143.block143_reallog_certificate /\
+    Block144.block144_reallog_certificate /\
+    Block145.block145_reallog_certificate /\
+    Block146.block146_reallog_certificate /\
+    Block147.block147_reallog_certificate /\
+    Block148.block148_reallog_certificate /\
+    Block149.block149_reallog_certificate /\
+    Block150.block150_reallog_certificate /\
+    Block151.block151_reallog_certificate /\
+    Block152.block152_reallog_certificate /\
+    Block153.block153_reallog_certificate /\
+    Block154.block154_reallog_certificate /\
+    Block155.block155_reallog_certificate /\
+    Block156.block156_reallog_certificate /\
+    Block157.block157_reallog_certificate /\
+    Block158.block158_reallog_certificate /\
+    Block159.block159_reallog_certificate /\
+    Block160.block160_reallog_certificate /\
+    Block161.block161_reallog_certificate /\
+    Block162.block162_reallog_certificate /\
+    Block163.block163_reallog_certificate /\
+    Block164.block164_reallog_certificate /\
+    Block165.block165_reallog_certificate /\
+    Block166.block166_reallog_certificate /\
+    Block167.block167_reallog_certificate /\
+    Block168.block168_reallog_certificate /\
+    Block169.block169_reallog_certificate /\
+    Block170.block170_reallog_certificate /\
+    Block171.block171_reallog_certificate /\
+    Block172.block172_reallog_certificate /\
+    Block173.block173_reallog_certificate /\
+    Block174.block174_reallog_certificate /\
+    Block175.block175_reallog_certificate /\
+    Block176.block176_reallog_certificate /\
+    Block177.block177_reallog_certificate /\
+    Block178.block178_reallog_certificate /\
+    Block179.block179_reallog_certificate /\
+    Block180.block180_reallog_certificate /\
+    Block181.block181_reallog_certificate /\
+    Block182.block182_reallog_certificate /\
+    Block183.block183_reallog_certificate /\
+    Block184.block184_reallog_certificate /\
+    Block185.block185_reallog_certificate /\
+    Block186.block186_reallog_certificate /\
+    Block187.block187_reallog_certificate /\
+    Block188.block188_reallog_certificate /\
+    Block189.block189_reallog_certificate /\
+    Block190.block190_reallog_certificate /\
+    Block191.block191_reallog_certificate /\
+    Block192.block192_reallog_certificate /\
+    Block193.block193_reallog_certificate /\
+    Block194.block194_reallog_certificate /\
+    Block195.block195_reallog_certificate /\
+    Block196.block196_reallog_certificate /\
+    Block197.block197_reallog_certificate /\
+    Block198.block198_reallog_certificate /\
+    Block199.block199_reallog_certificate /\
+    Block200.block200_reallog_certificate /\
+    Block201.block201_reallog_certificate /\
+    Block202.block202_reallog_certificate /\
+    Block203.block203_reallog_certificate /\
+    Block204.block204_reallog_certificate /\
+    Block205.block205_reallog_certificate /\
+    Block206.block206_reallog_certificate /\
+    Block207.block207_reallog_certificate /\
+    Block208.block208_reallog_certificate /\
+    Block209.block209_reallog_certificate /\
+    Block210.block210_reallog_certificate /\
+    Block211.block211_reallog_certificate /\
+    Block212.block212_reallog_certificate /\
+    Block213.block213_reallog_certificate /\
+    Block214.block214_reallog_certificate /\
+    Block215.block215_reallog_certificate /\
+    Block216.block216_reallog_certificate /\
+    Block217.block217_reallog_certificate /\
+    Block218.block218_reallog_certificate /\
+    Block219.block219_reallog_certificate /\
+    Block220.block220_reallog_certificate /\
+    Block221.block221_reallog_certificate /\
+    Block222.block222_reallog_certificate /\
+    Block223.block223_reallog_certificate /\
+    Block224.block224_reallog_certificate /\
+    Block225.block225_reallog_certificate /\
+    Block226.block226_reallog_certificate /\
+    Block227.block227_reallog_certificate /\
+    Block228.block228_reallog_certificate /\
+    Block229.block229_reallog_certificate /\
+    Block230.block230_reallog_certificate /\
+    Block231.block231_reallog_certificate /\
+    Block232.block232_reallog_certificate /\
+    Block233.block233_reallog_certificate /\
+    Block234.block234_reallog_certificate /\
+    Block235.block235_reallog_certificate /\
+    Block236.block236_reallog_certificate /\
+    Block237.block237_reallog_certificate /\
+    Block238.block238_reallog_certificate /\
+    Block239.block239_reallog_certificate /\
+    Block240.block240_reallog_certificate /\
+    Block241.block241_reallog_certificate /\
+    Block242.block242_reallog_certificate /\
+    Block243.block243_reallog_certificate /\
+    Block244.block244_reallog_certificate /\
+    Block245.block245_reallog_certificate /\
+    Block246.block246_reallog_certificate /\
+    Block247.block247_reallog_certificate /\
+    Block248.block248_reallog_certificate /\
+    Block249.block249_reallog_certificate /\
+    Block250.block250_reallog_certificate /\
+    Block251.block251_reallog_certificate /\
+    Block252.block252_reallog_certificate /\
+    Block253.block253_reallog_certificate /\
+    Block254.block254_reallog_certificate /\
+    Block255.block255_reallog_certificate /\
+    Block256.block256_reallog_certificate /\
+    Block257.block257_reallog_certificate /\
+    Block258.block258_reallog_certificate /\
+    Block259.block259_reallog_certificate /\
+    Block260.block260_reallog_certificate /\
+    Block261.block261_reallog_certificate /\
+    Block262.block262_reallog_certificate /\
+    Block263.block263_reallog_certificate /\
+    Block264.block264_reallog_certificate /\
+    Block265.block265_reallog_certificate /\
+    Block266.block266_reallog_certificate /\
+    Block267.block267_reallog_certificate /\
+    Block268.block268_reallog_certificate /\
+    Block269.block269_reallog_certificate /\
+    Block270.block270_reallog_certificate /\
+    Block271.block271_reallog_certificate /\
+    Block272.block272_reallog_certificate /\
+    Block273.block273_reallog_certificate /\
+    Block274.block274_reallog_certificate /\
+    Block275.block275_reallog_certificate /\
+    Block276.block276_reallog_certificate /\
+    Block277.block277_reallog_certificate /\
+    Block278.block278_reallog_certificate /\
+    Block279.block279_reallog_certificate /\
+    Block280.block280_reallog_certificate /\
+    Block281.block281_reallog_certificate /\
+    Block282.block282_reallog_certificate /\
+    Block283.block283_reallog_certificate /\
+    Block284.block284_reallog_certificate /\
+    Block285.block285_reallog_certificate /\
+    Block286.block286_reallog_certificate /\
+    Block287.block287_reallog_certificate /\
+    Block288.block288_reallog_certificate /\
+    Block289.block289_reallog_certificate /\
+    Block290.block290_reallog_certificate /\
+    Block291.block291_reallog_certificate /\
+    Block292.block292_reallog_certificate /\
+    Block293.block293_reallog_certificate /\
+    Block294.block294_reallog_certificate /\
+    Block295.block295_reallog_certificate /\
+    Block296.block296_reallog_certificate /\
+    Block297.block297_reallog_certificate /\
+    Block298.block298_reallog_certificate /\
+    Block299.block299_reallog_certificate /\
+    Block300.block300_reallog_certificate /\
+    Block301.block301_reallog_certificate /\
+    Block302.block302_reallog_certificate /\
+    Block303.block303_reallog_certificate /\
+    Block304.block304_reallog_certificate /\
+    Block305.block305_reallog_certificate /\
+    Block306.block306_reallog_certificate /\
+    Block307.block307_reallog_certificate /\
+    Block308.block308_reallog_certificate /\
+    Block309.block309_reallog_certificate /\
+    Block310.block310_reallog_certificate /\
+    Block311.block311_reallog_certificate /\
+    Block312.block312_reallog_certificate /\
+    Block313.block313_reallog_certificate /\
+    Block314.block314_reallog_certificate /\
+    Block315.block315_reallog_certificate /\
+    Block316.block316_reallog_certificate /\
+    Block317.block317_reallog_certificate /\
+    Block318.block318_reallog_certificate /\
+    Block319.block319_reallog_certificate /\
+    Block320.block320_reallog_certificate /\
+    Block321.block321_reallog_certificate /\
+    Block322.block322_reallog_certificate /\
+    Block323.block323_reallog_certificate /\
+    Block324.block324_reallog_certificate /\
+    Block325.block325_reallog_certificate /\
+    Block326.block326_reallog_certificate /\
+    Block327.block327_reallog_certificate /\
+    Block328.block328_reallog_certificate /\
+    Block329.block329_reallog_certificate /\
+    Block330.block330_reallog_certificate /\
+    Block331.block331_reallog_certificate /\
+    Block332.block332_reallog_certificate /\
+    Block333.block333_reallog_certificate /\
+    Block334.block334_reallog_certificate /\
+    Block335.block335_reallog_certificate /\
+    Block336.block336_reallog_certificate /\
+    Block337.block337_reallog_certificate /\
+    Block338.block338_reallog_certificate /\
+    Block339.block339_reallog_certificate /\
+    Block340.block340_reallog_certificate /\
+    Block341.block341_reallog_certificate /\
+    Block342.block342_reallog_certificate /\
+    Block343.block343_reallog_certificate /\
+    Block344.block344_reallog_certificate /\
+    Block345.block345_reallog_certificate /\
+    Block346.block346_reallog_certificate /\
+    Block347.block347_reallog_certificate /\
+    Block348.block348_reallog_certificate /\
+    Block349.block349_reallog_certificate /\
+    Block350.block350_reallog_certificate /\
+    Block351.block351_reallog_certificate /\
+    Block352.block352_reallog_certificate /\
+    Block353.block353_reallog_certificate /\
+    Block354.block354_reallog_certificate /\
+    Block355.block355_reallog_certificate /\
+    Block356.block356_reallog_certificate /\
+    Block357.block357_reallog_certificate /\
+    Block358.block358_reallog_certificate /\
+    Block359.block359_reallog_certificate /\
+    Block360.block360_reallog_certificate /\
+    Block361.block361_reallog_certificate /\
+    Block362.block362_reallog_certificate /\
+    Block363.block363_reallog_certificate /\
+    Block364.block364_reallog_certificate /\
+    Block365.block365_reallog_certificate /\
+    Block366.block366_reallog_certificate /\
+    Block367.block367_reallog_certificate /\
+    Block368.block368_reallog_certificate /\
+    Block369.block369_reallog_certificate /\
+    Block370.block370_reallog_certificate /\
+    Block371.block371_reallog_certificate /\
+    Block372.block372_reallog_certificate /\
+    Block373.block373_reallog_certificate /\
+    Block374.block374_reallog_certificate /\
+    Block375.block375_reallog_certificate /\
+    Block376.block376_reallog_certificate /\
+    Block377.block377_reallog_certificate /\
+    Block378.block378_reallog_certificate /\
+    Block379.block379_reallog_certificate /\
+    Block380.block380_reallog_certificate /\
+    Block381.block381_reallog_certificate /\
+    Block382.block382_reallog_certificate /\
+    Block383.block383_reallog_certificate /\
+    Block384.block384_reallog_certificate /\
+    Block385.block385_reallog_certificate /\
+    Block386.block386_reallog_certificate /\
+    Block387.block387_reallog_certificate /\
+    Block388.block388_reallog_certificate /\
+    Block389.block389_reallog_certificate /\
+    Block390.block390_reallog_certificate /\
+    Block391.block391_reallog_certificate /\
+    Block392.block392_reallog_certificate /\
+    Block393.block393_reallog_certificate /\
+    Block394.block394_reallog_certificate /\
+    Block395.block395_reallog_certificate /\
+    Block396.block396_reallog_certificate /\
+    Block397.block397_reallog_certificate /\
+    Block398.block398_reallog_certificate /\
+    Block399.block399_reallog_certificate /\
+    Block400.block400_reallog_certificate /\
+    Block401.block401_reallog_certificate /\
+    Block402.block402_reallog_certificate /\
+    Block403.block403_reallog_certificate /\
+    Block404.block404_reallog_certificate /\
+    Block405.block405_reallog_certificate /\
+    Block406.block406_reallog_certificate /\
+    Block407.block407_reallog_certificate /\
+    Block408.block408_reallog_certificate /\
+    Block409.block409_reallog_certificate /\
+    Block410.block410_reallog_certificate /\
+    Block411.block411_reallog_certificate /\
+    Block412.block412_reallog_certificate /\
+    Block413.block413_reallog_certificate /\
+    Block414.block414_reallog_certificate /\
+    Block415.block415_reallog_certificate /\
+    Block416.block416_reallog_certificate /\
+    Block417.block417_reallog_certificate /\
+    Block418.block418_reallog_certificate /\
+    Block419.block419_reallog_certificate /\
+    Block420.block420_reallog_certificate /\
+    Block421.block421_reallog_certificate /\
+    Block422.block422_reallog_certificate /\
+    Block423.block423_reallog_certificate /\
+    Block424.block424_reallog_certificate /\
+    Block425.block425_reallog_certificate /\
+    Block426.block426_reallog_certificate /\
+    Block427.block427_reallog_certificate /\
+    Block428.block428_reallog_certificate /\
+    Block429.block429_reallog_certificate /\
+    Block430.block430_reallog_certificate /\
+    Block431.block431_reallog_certificate /\
+    Block432.block432_reallog_certificate /\
+    Block433.block433_reallog_certificate /\
+    Block434.block434_reallog_certificate /\
+    Block435.block435_reallog_certificate /\
+    Block436.block436_reallog_certificate /\
+    Block437.block437_reallog_certificate /\
+    Block438.block438_reallog_certificate /\
+    Block439.block439_reallog_certificate /\
+    Block440.block440_reallog_certificate /\
+    Block441.block441_reallog_certificate /\
+    Block442.block442_reallog_certificate /\
+    Block443.block443_reallog_certificate /\
+    Block444.block444_reallog_certificate /\
+    Block445.block445_reallog_certificate /\
+    Block446.block446_reallog_certificate /\
+    Block447.block447_reallog_certificate /\
+    Block448.block448_reallog_certificate /\
+    Block449.block449_reallog_certificate /\
+    Block450.block450_reallog_certificate /\
+    Block451.block451_reallog_certificate /\
+    Block452.block452_reallog_certificate /\
+    Block453.block453_reallog_certificate /\
+    Block454.block454_reallog_certificate /\
+    Block455.block455_reallog_certificate /\
+    Block456.block456_reallog_certificate /\
+    Block457.block457_reallog_certificate /\
+    Block458.block458_reallog_certificate /\
+    Block459.block459_reallog_certificate /\
+    Block460.block460_reallog_certificate /\
+    Block461.block461_reallog_certificate /\
+    Block462.block462_reallog_certificate /\
+    Block463.block463_reallog_certificate /\
+    Block464.block464_reallog_certificate /\
+    Block465.block465_reallog_certificate /\
+    Block466.block466_reallog_certificate /\
+    Block467.block467_reallog_certificate /\
+    Block468.block468_reallog_certificate /\
+    Block469.block469_reallog_certificate /\
+    Block470.block470_reallog_certificate /\
+    Block471.block471_reallog_certificate /\
+    Block472.block472_reallog_certificate /\
+    Block473.block473_reallog_certificate /\
+    Block474.block474_reallog_certificate /\
+    Block475.block475_reallog_certificate /\
+    Block476.block476_reallog_certificate /\
+    Block477.block477_reallog_certificate /\
+    Block478.block478_reallog_certificate /\
+    Block479.block479_reallog_certificate /\
+    Block480.block480_reallog_certificate /\
+    Block481.block481_reallog_certificate /\
+    Block482.block482_reallog_certificate /\
+    Block483.block483_reallog_certificate /\
+    Block484.block484_reallog_certificate /\
+    Block485.block485_reallog_certificate /\
+    Block486.block486_reallog_certificate /\
+    Block487.block487_reallog_certificate /\
+    Block488.block488_reallog_certificate /\
+    Block489.block489_reallog_certificate /\
+    Block490.block490_reallog_certificate /\
+    Block491.block491_reallog_certificate /\
+    Block492.block492_reallog_certificate /\
+    Block493.block493_reallog_certificate /\
+    Block494.block494_reallog_certificate /\
+    Block495.block495_reallog_certificate /\
+    Block496.block496_reallog_certificate /\
+    Block497.block497_reallog_certificate /\
+    Block498.block498_reallog_certificate /\
+    Block499.block499_reallog_certificate /\
+    Block500.block500_reallog_certificate /\
+    Block501.block501_reallog_certificate /\
+    Block502.block502_reallog_certificate /\
+    Block503.block503_reallog_certificate /\
+    Block504.block504_reallog_certificate /\
+    Block505.block505_reallog_certificate /\
+    Block506.block506_reallog_certificate /\
+    Block507.block507_reallog_certificate /\
+    Block508.block508_reallog_certificate /\
+    Block509.block509_reallog_certificate /\
+    Block510.block510_reallog_certificate /\
+    Block511.block511_reallog_certificate /\
+    Block512.block512_reallog_certificate /\
+    Block513.block513_reallog_certificate /\
+    Block514.block514_reallog_certificate /\
+    Block515.block515_reallog_certificate /\
+    Block516.block516_reallog_certificate /\
+    Block517.block517_reallog_certificate /\
+    Block518.block518_reallog_certificate /\
+    Block519.block519_reallog_certificate /\
+    Block520.block520_reallog_certificate /\
+    Block521.block521_reallog_certificate /\
+    Block522.block522_reallog_certificate /\
+    Block523.block523_reallog_certificate /\
+    Block524.block524_reallog_certificate /\
+    Block525.block525_reallog_certificate /\
+    Block526.block526_reallog_certificate /\
+    Block527.block527_reallog_certificate /\
+    Block528.block528_reallog_certificate /\
+    Block529.block529_reallog_certificate /\
+    Block530.block530_reallog_certificate /\
+    Block531.block531_reallog_certificate /\
+    Block532.block532_reallog_certificate /\
+    Block533.block533_reallog_certificate /\
+    Block534.block534_reallog_certificate /\
+    Block535.block535_reallog_certificate /\
+    Block536.block536_reallog_certificate /\
+    Block537.block537_reallog_certificate /\
+    Block538.block538_reallog_certificate /\
+    Block539.block539_reallog_certificate /\
+    Block540.block540_reallog_certificate /\
+    Block541.block541_reallog_certificate /\
+    Block542.block542_reallog_certificate /\
+    Block543.block543_reallog_certificate /\
+    Block544.block544_reallog_certificate /\
+    Block545.block545_reallog_certificate /\
+    Block546.block546_reallog_certificate /\
+    Block547.block547_reallog_certificate /\
+    Block548.block548_reallog_certificate /\
+    Block549.block549_reallog_certificate /\
+    Block550.block550_reallog_certificate /\
+    Block551.block551_reallog_certificate /\
+    Block552.block552_reallog_certificate /\
+    Block553.block553_reallog_certificate /\
+    Block554.block554_reallog_certificate /\
+    Block555.block555_reallog_certificate /\
+    Block556.block556_reallog_certificate /\
+    Block557.block557_reallog_certificate /\
+    Block558.block558_reallog_certificate /\
+    Block559.block559_reallog_certificate
+
+theorem all560_reallog_certificate_proof :
+    all560_reallog_certificate := by
+  exact ⟨Block000.block000_reallog_certificate_proof, ⟨Block001.block001_reallog_certificate_proof, ⟨Block002.block002_reallog_certificate_proof, ⟨Block003.block003_reallog_certificate_proof, ⟨Block004.block004_reallog_certificate_proof, ⟨Block005.block005_reallog_certificate_proof, ⟨Block006.block006_reallog_certificate_proof, ⟨Block007.block007_reallog_certificate_proof, ⟨Block008.block008_reallog_certificate_proof, ⟨Block009.block009_reallog_certificate_proof, ⟨Block010.block010_reallog_certificate_proof, ⟨Block011.block011_reallog_certificate_proof, ⟨Block012.block012_reallog_certificate_proof, ⟨Block013.block013_reallog_certificate_proof, ⟨Block014.block014_reallog_certificate_proof, ⟨Block015.block015_reallog_certificate_proof, ⟨Block016.block016_reallog_certificate_proof, ⟨Block017.block017_reallog_certificate_proof, ⟨Block018.block018_reallog_certificate_proof, ⟨Block019.block019_reallog_certificate_proof, ⟨Block020.block020_reallog_certificate_proof, ⟨Block021.block021_reallog_certificate_proof, ⟨Block022.block022_reallog_certificate_proof, ⟨Block023.block023_reallog_certificate_proof, ⟨Block024.block024_reallog_certificate_proof, ⟨Block025.block025_reallog_certificate_proof, ⟨Block026.block026_reallog_certificate_proof, ⟨Block027.block027_reallog_certificate_proof, ⟨Block028.block028_reallog_certificate_proof, ⟨Block029.block029_reallog_certificate_proof, ⟨Block030.block030_reallog_certificate_proof, ⟨Block031.block031_reallog_certificate_proof, ⟨Block032.block032_reallog_certificate_proof, ⟨Block033.block033_reallog_certificate_proof, ⟨Block034.block034_reallog_certificate_proof, ⟨Block035.block035_reallog_certificate_proof, ⟨Block036.block036_reallog_certificate_proof, ⟨Block037.block037_reallog_certificate_proof, ⟨Block038.block038_reallog_certificate_proof, ⟨Block039.block039_reallog_certificate_proof, ⟨Block040.block040_reallog_certificate_proof, ⟨Block041.block041_reallog_certificate_proof, ⟨Block042.block042_reallog_certificate_proof, ⟨Block043.block043_reallog_certificate_proof, ⟨Block044.block044_reallog_certificate_proof, ⟨Block045.block045_reallog_certificate_proof, ⟨Block046.block046_reallog_certificate_proof, ⟨Block047.block047_reallog_certificate_proof, ⟨Block048.block048_reallog_certificate_proof, ⟨Block049.block049_reallog_certificate_proof, ⟨Block050.block050_reallog_certificate_proof, ⟨Block051.block051_reallog_certificate_proof, ⟨Block052.block052_reallog_certificate_proof, ⟨Block053.block053_reallog_certificate_proof, ⟨Block054.block054_reallog_certificate_proof, ⟨Block055.block055_reallog_certificate_proof, ⟨Block056.block056_reallog_certificate_proof, ⟨Block057.block057_reallog_certificate_proof, ⟨Block058.block058_reallog_certificate_proof, ⟨Block059.block059_reallog_certificate_proof, ⟨Block060.block060_reallog_certificate_proof, ⟨Block061.block061_reallog_certificate_proof, ⟨Block062.block062_reallog_certificate_proof, ⟨Block063.block063_reallog_certificate_proof, ⟨Block064.block064_reallog_certificate_proof, ⟨Block065.block065_reallog_certificate_proof, ⟨Block066.block066_reallog_certificate_proof, ⟨Block067.block067_reallog_certificate_proof, ⟨Block068.block068_reallog_certificate_proof, ⟨Block069.block069_reallog_certificate_proof, ⟨Block070.block070_reallog_certificate_proof, ⟨Block071.block071_reallog_certificate_proof, ⟨Block072.block072_reallog_certificate_proof, ⟨Block073.block073_reallog_certificate_proof, ⟨Block074.block074_reallog_certificate_proof, ⟨Block075.block075_reallog_certificate_proof, ⟨Block076.block076_reallog_certificate_proof, ⟨Block077.block077_reallog_certificate_proof, ⟨Block078.block078_reallog_certificate_proof, ⟨Block079.block079_reallog_certificate_proof, ⟨Block080.block080_reallog_certificate_proof, ⟨Block081.block081_reallog_certificate_proof, ⟨Block082.block082_reallog_certificate_proof, ⟨Block083.block083_reallog_certificate_proof, ⟨Block084.block084_reallog_certificate_proof, ⟨Block085.block085_reallog_certificate_proof, ⟨Block086.block086_reallog_certificate_proof, ⟨Block087.block087_reallog_certificate_proof, ⟨Block088.block088_reallog_certificate_proof, ⟨Block089.block089_reallog_certificate_proof, ⟨Block090.block090_reallog_certificate_proof, ⟨Block091.block091_reallog_certificate_proof, ⟨Block092.block092_reallog_certificate_proof, ⟨Block093.block093_reallog_certificate_proof, ⟨Block094.block094_reallog_certificate_proof, ⟨Block095.block095_reallog_certificate_proof, ⟨Block096.block096_reallog_certificate_proof, ⟨Block097.block097_reallog_certificate_proof, ⟨Block098.block098_reallog_certificate_proof, ⟨Block099.block099_reallog_certificate_proof, ⟨Block100.block100_reallog_certificate_proof, ⟨Block101.block101_reallog_certificate_proof, ⟨Block102.block102_reallog_certificate_proof, ⟨Block103.block103_reallog_certificate_proof, ⟨Block104.block104_reallog_certificate_proof, ⟨Block105.block105_reallog_certificate_proof, ⟨Block106.block106_reallog_certificate_proof, ⟨Block107.block107_reallog_certificate_proof, ⟨Block108.block108_reallog_certificate_proof, ⟨Block109.block109_reallog_certificate_proof, ⟨Block110.block110_reallog_certificate_proof, ⟨Block111.block111_reallog_certificate_proof, ⟨Block112.block112_reallog_certificate_proof, ⟨Block113.block113_reallog_certificate_proof, ⟨Block114.block114_reallog_certificate_proof, ⟨Block115.block115_reallog_certificate_proof, ⟨Block116.block116_reallog_certificate_proof, ⟨Block117.block117_reallog_certificate_proof, ⟨Block118.block118_reallog_certificate_proof, ⟨Block119.block119_reallog_certificate_proof, ⟨Block120.block120_reallog_certificate_proof, ⟨Block121.block121_reallog_certificate_proof, ⟨Block122.block122_reallog_certificate_proof, ⟨Block123.block123_reallog_certificate_proof, ⟨Block124.block124_reallog_certificate_proof, ⟨Block125.block125_reallog_certificate_proof, ⟨Block126.block126_reallog_certificate_proof, ⟨Block127.block127_reallog_certificate_proof, ⟨Block128.block128_reallog_certificate_proof, ⟨Block129.block129_reallog_certificate_proof, ⟨Block130.block130_reallog_certificate_proof, ⟨Block131.block131_reallog_certificate_proof, ⟨Block132.block132_reallog_certificate_proof, ⟨Block133.block133_reallog_certificate_proof, ⟨Block134.block134_reallog_certificate_proof, ⟨Block135.block135_reallog_certificate_proof, ⟨Block136.block136_reallog_certificate_proof, ⟨Block137.block137_reallog_certificate_proof, ⟨Block138.block138_reallog_certificate_proof, ⟨Block139.block139_reallog_certificate_proof, ⟨Block140.block140_reallog_certificate_proof, ⟨Block141.block141_reallog_certificate_proof, ⟨Block142.block142_reallog_certificate_proof, ⟨Block143.block143_reallog_certificate_proof, ⟨Block144.block144_reallog_certificate_proof, ⟨Block145.block145_reallog_certificate_proof, ⟨Block146.block146_reallog_certificate_proof, ⟨Block147.block147_reallog_certificate_proof, ⟨Block148.block148_reallog_certificate_proof, ⟨Block149.block149_reallog_certificate_proof, ⟨Block150.block150_reallog_certificate_proof, ⟨Block151.block151_reallog_certificate_proof, ⟨Block152.block152_reallog_certificate_proof, ⟨Block153.block153_reallog_certificate_proof, ⟨Block154.block154_reallog_certificate_proof, ⟨Block155.block155_reallog_certificate_proof, ⟨Block156.block156_reallog_certificate_proof, ⟨Block157.block157_reallog_certificate_proof, ⟨Block158.block158_reallog_certificate_proof, ⟨Block159.block159_reallog_certificate_proof, ⟨Block160.block160_reallog_certificate_proof, ⟨Block161.block161_reallog_certificate_proof, ⟨Block162.block162_reallog_certificate_proof, ⟨Block163.block163_reallog_certificate_proof, ⟨Block164.block164_reallog_certificate_proof, ⟨Block165.block165_reallog_certificate_proof, ⟨Block166.block166_reallog_certificate_proof, ⟨Block167.block167_reallog_certificate_proof, ⟨Block168.block168_reallog_certificate_proof, ⟨Block169.block169_reallog_certificate_proof, ⟨Block170.block170_reallog_certificate_proof, ⟨Block171.block171_reallog_certificate_proof, ⟨Block172.block172_reallog_certificate_proof, ⟨Block173.block173_reallog_certificate_proof, ⟨Block174.block174_reallog_certificate_proof, ⟨Block175.block175_reallog_certificate_proof, ⟨Block176.block176_reallog_certificate_proof, ⟨Block177.block177_reallog_certificate_proof, ⟨Block178.block178_reallog_certificate_proof, ⟨Block179.block179_reallog_certificate_proof, ⟨Block180.block180_reallog_certificate_proof, ⟨Block181.block181_reallog_certificate_proof, ⟨Block182.block182_reallog_certificate_proof, ⟨Block183.block183_reallog_certificate_proof, ⟨Block184.block184_reallog_certificate_proof, ⟨Block185.block185_reallog_certificate_proof, ⟨Block186.block186_reallog_certificate_proof, ⟨Block187.block187_reallog_certificate_proof, ⟨Block188.block188_reallog_certificate_proof, ⟨Block189.block189_reallog_certificate_proof, ⟨Block190.block190_reallog_certificate_proof, ⟨Block191.block191_reallog_certificate_proof, ⟨Block192.block192_reallog_certificate_proof, ⟨Block193.block193_reallog_certificate_proof, ⟨Block194.block194_reallog_certificate_proof, ⟨Block195.block195_reallog_certificate_proof, ⟨Block196.block196_reallog_certificate_proof, ⟨Block197.block197_reallog_certificate_proof, ⟨Block198.block198_reallog_certificate_proof, ⟨Block199.block199_reallog_certificate_proof, ⟨Block200.block200_reallog_certificate_proof, ⟨Block201.block201_reallog_certificate_proof, ⟨Block202.block202_reallog_certificate_proof, ⟨Block203.block203_reallog_certificate_proof, ⟨Block204.block204_reallog_certificate_proof, ⟨Block205.block205_reallog_certificate_proof, ⟨Block206.block206_reallog_certificate_proof, ⟨Block207.block207_reallog_certificate_proof, ⟨Block208.block208_reallog_certificate_proof, ⟨Block209.block209_reallog_certificate_proof, ⟨Block210.block210_reallog_certificate_proof, ⟨Block211.block211_reallog_certificate_proof, ⟨Block212.block212_reallog_certificate_proof, ⟨Block213.block213_reallog_certificate_proof, ⟨Block214.block214_reallog_certificate_proof, ⟨Block215.block215_reallog_certificate_proof, ⟨Block216.block216_reallog_certificate_proof, ⟨Block217.block217_reallog_certificate_proof, ⟨Block218.block218_reallog_certificate_proof, ⟨Block219.block219_reallog_certificate_proof, ⟨Block220.block220_reallog_certificate_proof, ⟨Block221.block221_reallog_certificate_proof, ⟨Block222.block222_reallog_certificate_proof, ⟨Block223.block223_reallog_certificate_proof, ⟨Block224.block224_reallog_certificate_proof, ⟨Block225.block225_reallog_certificate_proof, ⟨Block226.block226_reallog_certificate_proof, ⟨Block227.block227_reallog_certificate_proof, ⟨Block228.block228_reallog_certificate_proof, ⟨Block229.block229_reallog_certificate_proof, ⟨Block230.block230_reallog_certificate_proof, ⟨Block231.block231_reallog_certificate_proof, ⟨Block232.block232_reallog_certificate_proof, ⟨Block233.block233_reallog_certificate_proof, ⟨Block234.block234_reallog_certificate_proof, ⟨Block235.block235_reallog_certificate_proof, ⟨Block236.block236_reallog_certificate_proof, ⟨Block237.block237_reallog_certificate_proof, ⟨Block238.block238_reallog_certificate_proof, ⟨Block239.block239_reallog_certificate_proof, ⟨Block240.block240_reallog_certificate_proof, ⟨Block241.block241_reallog_certificate_proof, ⟨Block242.block242_reallog_certificate_proof, ⟨Block243.block243_reallog_certificate_proof, ⟨Block244.block244_reallog_certificate_proof, ⟨Block245.block245_reallog_certificate_proof, ⟨Block246.block246_reallog_certificate_proof, ⟨Block247.block247_reallog_certificate_proof, ⟨Block248.block248_reallog_certificate_proof, ⟨Block249.block249_reallog_certificate_proof, ⟨Block250.block250_reallog_certificate_proof, ⟨Block251.block251_reallog_certificate_proof, ⟨Block252.block252_reallog_certificate_proof, ⟨Block253.block253_reallog_certificate_proof, ⟨Block254.block254_reallog_certificate_proof, ⟨Block255.block255_reallog_certificate_proof, ⟨Block256.block256_reallog_certificate_proof, ⟨Block257.block257_reallog_certificate_proof, ⟨Block258.block258_reallog_certificate_proof, ⟨Block259.block259_reallog_certificate_proof, ⟨Block260.block260_reallog_certificate_proof, ⟨Block261.block261_reallog_certificate_proof, ⟨Block262.block262_reallog_certificate_proof, ⟨Block263.block263_reallog_certificate_proof, ⟨Block264.block264_reallog_certificate_proof, ⟨Block265.block265_reallog_certificate_proof, ⟨Block266.block266_reallog_certificate_proof, ⟨Block267.block267_reallog_certificate_proof, ⟨Block268.block268_reallog_certificate_proof, ⟨Block269.block269_reallog_certificate_proof, ⟨Block270.block270_reallog_certificate_proof, ⟨Block271.block271_reallog_certificate_proof, ⟨Block272.block272_reallog_certificate_proof, ⟨Block273.block273_reallog_certificate_proof, ⟨Block274.block274_reallog_certificate_proof, ⟨Block275.block275_reallog_certificate_proof, ⟨Block276.block276_reallog_certificate_proof, ⟨Block277.block277_reallog_certificate_proof, ⟨Block278.block278_reallog_certificate_proof, ⟨Block279.block279_reallog_certificate_proof, ⟨Block280.block280_reallog_certificate_proof, ⟨Block281.block281_reallog_certificate_proof, ⟨Block282.block282_reallog_certificate_proof, ⟨Block283.block283_reallog_certificate_proof, ⟨Block284.block284_reallog_certificate_proof, ⟨Block285.block285_reallog_certificate_proof, ⟨Block286.block286_reallog_certificate_proof, ⟨Block287.block287_reallog_certificate_proof, ⟨Block288.block288_reallog_certificate_proof, ⟨Block289.block289_reallog_certificate_proof, ⟨Block290.block290_reallog_certificate_proof, ⟨Block291.block291_reallog_certificate_proof, ⟨Block292.block292_reallog_certificate_proof, ⟨Block293.block293_reallog_certificate_proof, ⟨Block294.block294_reallog_certificate_proof, ⟨Block295.block295_reallog_certificate_proof, ⟨Block296.block296_reallog_certificate_proof, ⟨Block297.block297_reallog_certificate_proof, ⟨Block298.block298_reallog_certificate_proof, ⟨Block299.block299_reallog_certificate_proof, ⟨Block300.block300_reallog_certificate_proof, ⟨Block301.block301_reallog_certificate_proof, ⟨Block302.block302_reallog_certificate_proof, ⟨Block303.block303_reallog_certificate_proof, ⟨Block304.block304_reallog_certificate_proof, ⟨Block305.block305_reallog_certificate_proof, ⟨Block306.block306_reallog_certificate_proof, ⟨Block307.block307_reallog_certificate_proof, ⟨Block308.block308_reallog_certificate_proof, ⟨Block309.block309_reallog_certificate_proof, ⟨Block310.block310_reallog_certificate_proof, ⟨Block311.block311_reallog_certificate_proof, ⟨Block312.block312_reallog_certificate_proof, ⟨Block313.block313_reallog_certificate_proof, ⟨Block314.block314_reallog_certificate_proof, ⟨Block315.block315_reallog_certificate_proof, ⟨Block316.block316_reallog_certificate_proof, ⟨Block317.block317_reallog_certificate_proof, ⟨Block318.block318_reallog_certificate_proof, ⟨Block319.block319_reallog_certificate_proof, ⟨Block320.block320_reallog_certificate_proof, ⟨Block321.block321_reallog_certificate_proof, ⟨Block322.block322_reallog_certificate_proof, ⟨Block323.block323_reallog_certificate_proof, ⟨Block324.block324_reallog_certificate_proof, ⟨Block325.block325_reallog_certificate_proof, ⟨Block326.block326_reallog_certificate_proof, ⟨Block327.block327_reallog_certificate_proof, ⟨Block328.block328_reallog_certificate_proof, ⟨Block329.block329_reallog_certificate_proof, ⟨Block330.block330_reallog_certificate_proof, ⟨Block331.block331_reallog_certificate_proof, ⟨Block332.block332_reallog_certificate_proof, ⟨Block333.block333_reallog_certificate_proof, ⟨Block334.block334_reallog_certificate_proof, ⟨Block335.block335_reallog_certificate_proof, ⟨Block336.block336_reallog_certificate_proof, ⟨Block337.block337_reallog_certificate_proof, ⟨Block338.block338_reallog_certificate_proof, ⟨Block339.block339_reallog_certificate_proof, ⟨Block340.block340_reallog_certificate_proof, ⟨Block341.block341_reallog_certificate_proof, ⟨Block342.block342_reallog_certificate_proof, ⟨Block343.block343_reallog_certificate_proof, ⟨Block344.block344_reallog_certificate_proof, ⟨Block345.block345_reallog_certificate_proof, ⟨Block346.block346_reallog_certificate_proof, ⟨Block347.block347_reallog_certificate_proof, ⟨Block348.block348_reallog_certificate_proof, ⟨Block349.block349_reallog_certificate_proof, ⟨Block350.block350_reallog_certificate_proof, ⟨Block351.block351_reallog_certificate_proof, ⟨Block352.block352_reallog_certificate_proof, ⟨Block353.block353_reallog_certificate_proof, ⟨Block354.block354_reallog_certificate_proof, ⟨Block355.block355_reallog_certificate_proof, ⟨Block356.block356_reallog_certificate_proof, ⟨Block357.block357_reallog_certificate_proof, ⟨Block358.block358_reallog_certificate_proof, ⟨Block359.block359_reallog_certificate_proof, ⟨Block360.block360_reallog_certificate_proof, ⟨Block361.block361_reallog_certificate_proof, ⟨Block362.block362_reallog_certificate_proof, ⟨Block363.block363_reallog_certificate_proof, ⟨Block364.block364_reallog_certificate_proof, ⟨Block365.block365_reallog_certificate_proof, ⟨Block366.block366_reallog_certificate_proof, ⟨Block367.block367_reallog_certificate_proof, ⟨Block368.block368_reallog_certificate_proof, ⟨Block369.block369_reallog_certificate_proof, ⟨Block370.block370_reallog_certificate_proof, ⟨Block371.block371_reallog_certificate_proof, ⟨Block372.block372_reallog_certificate_proof, ⟨Block373.block373_reallog_certificate_proof, ⟨Block374.block374_reallog_certificate_proof, ⟨Block375.block375_reallog_certificate_proof, ⟨Block376.block376_reallog_certificate_proof, ⟨Block377.block377_reallog_certificate_proof, ⟨Block378.block378_reallog_certificate_proof, ⟨Block379.block379_reallog_certificate_proof, ⟨Block380.block380_reallog_certificate_proof, ⟨Block381.block381_reallog_certificate_proof, ⟨Block382.block382_reallog_certificate_proof, ⟨Block383.block383_reallog_certificate_proof, ⟨Block384.block384_reallog_certificate_proof, ⟨Block385.block385_reallog_certificate_proof, ⟨Block386.block386_reallog_certificate_proof, ⟨Block387.block387_reallog_certificate_proof, ⟨Block388.block388_reallog_certificate_proof, ⟨Block389.block389_reallog_certificate_proof, ⟨Block390.block390_reallog_certificate_proof, ⟨Block391.block391_reallog_certificate_proof, ⟨Block392.block392_reallog_certificate_proof, ⟨Block393.block393_reallog_certificate_proof, ⟨Block394.block394_reallog_certificate_proof, ⟨Block395.block395_reallog_certificate_proof, ⟨Block396.block396_reallog_certificate_proof, ⟨Block397.block397_reallog_certificate_proof, ⟨Block398.block398_reallog_certificate_proof, ⟨Block399.block399_reallog_certificate_proof, ⟨Block400.block400_reallog_certificate_proof, ⟨Block401.block401_reallog_certificate_proof, ⟨Block402.block402_reallog_certificate_proof, ⟨Block403.block403_reallog_certificate_proof, ⟨Block404.block404_reallog_certificate_proof, ⟨Block405.block405_reallog_certificate_proof, ⟨Block406.block406_reallog_certificate_proof, ⟨Block407.block407_reallog_certificate_proof, ⟨Block408.block408_reallog_certificate_proof, ⟨Block409.block409_reallog_certificate_proof, ⟨Block410.block410_reallog_certificate_proof, ⟨Block411.block411_reallog_certificate_proof, ⟨Block412.block412_reallog_certificate_proof, ⟨Block413.block413_reallog_certificate_proof, ⟨Block414.block414_reallog_certificate_proof, ⟨Block415.block415_reallog_certificate_proof, ⟨Block416.block416_reallog_certificate_proof, ⟨Block417.block417_reallog_certificate_proof, ⟨Block418.block418_reallog_certificate_proof, ⟨Block419.block419_reallog_certificate_proof, ⟨Block420.block420_reallog_certificate_proof, ⟨Block421.block421_reallog_certificate_proof, ⟨Block422.block422_reallog_certificate_proof, ⟨Block423.block423_reallog_certificate_proof, ⟨Block424.block424_reallog_certificate_proof, ⟨Block425.block425_reallog_certificate_proof, ⟨Block426.block426_reallog_certificate_proof, ⟨Block427.block427_reallog_certificate_proof, ⟨Block428.block428_reallog_certificate_proof, ⟨Block429.block429_reallog_certificate_proof, ⟨Block430.block430_reallog_certificate_proof, ⟨Block431.block431_reallog_certificate_proof, ⟨Block432.block432_reallog_certificate_proof, ⟨Block433.block433_reallog_certificate_proof, ⟨Block434.block434_reallog_certificate_proof, ⟨Block435.block435_reallog_certificate_proof, ⟨Block436.block436_reallog_certificate_proof, ⟨Block437.block437_reallog_certificate_proof, ⟨Block438.block438_reallog_certificate_proof, ⟨Block439.block439_reallog_certificate_proof, ⟨Block440.block440_reallog_certificate_proof, ⟨Block441.block441_reallog_certificate_proof, ⟨Block442.block442_reallog_certificate_proof, ⟨Block443.block443_reallog_certificate_proof, ⟨Block444.block444_reallog_certificate_proof, ⟨Block445.block445_reallog_certificate_proof, ⟨Block446.block446_reallog_certificate_proof, ⟨Block447.block447_reallog_certificate_proof, ⟨Block448.block448_reallog_certificate_proof, ⟨Block449.block449_reallog_certificate_proof, ⟨Block450.block450_reallog_certificate_proof, ⟨Block451.block451_reallog_certificate_proof, ⟨Block452.block452_reallog_certificate_proof, ⟨Block453.block453_reallog_certificate_proof, ⟨Block454.block454_reallog_certificate_proof, ⟨Block455.block455_reallog_certificate_proof, ⟨Block456.block456_reallog_certificate_proof, ⟨Block457.block457_reallog_certificate_proof, ⟨Block458.block458_reallog_certificate_proof, ⟨Block459.block459_reallog_certificate_proof, ⟨Block460.block460_reallog_certificate_proof, ⟨Block461.block461_reallog_certificate_proof, ⟨Block462.block462_reallog_certificate_proof, ⟨Block463.block463_reallog_certificate_proof, ⟨Block464.block464_reallog_certificate_proof, ⟨Block465.block465_reallog_certificate_proof, ⟨Block466.block466_reallog_certificate_proof, ⟨Block467.block467_reallog_certificate_proof, ⟨Block468.block468_reallog_certificate_proof, ⟨Block469.block469_reallog_certificate_proof, ⟨Block470.block470_reallog_certificate_proof, ⟨Block471.block471_reallog_certificate_proof, ⟨Block472.block472_reallog_certificate_proof, ⟨Block473.block473_reallog_certificate_proof, ⟨Block474.block474_reallog_certificate_proof, ⟨Block475.block475_reallog_certificate_proof, ⟨Block476.block476_reallog_certificate_proof, ⟨Block477.block477_reallog_certificate_proof, ⟨Block478.block478_reallog_certificate_proof, ⟨Block479.block479_reallog_certificate_proof, ⟨Block480.block480_reallog_certificate_proof, ⟨Block481.block481_reallog_certificate_proof, ⟨Block482.block482_reallog_certificate_proof, ⟨Block483.block483_reallog_certificate_proof, ⟨Block484.block484_reallog_certificate_proof, ⟨Block485.block485_reallog_certificate_proof, ⟨Block486.block486_reallog_certificate_proof, ⟨Block487.block487_reallog_certificate_proof, ⟨Block488.block488_reallog_certificate_proof, ⟨Block489.block489_reallog_certificate_proof, ⟨Block490.block490_reallog_certificate_proof, ⟨Block491.block491_reallog_certificate_proof, ⟨Block492.block492_reallog_certificate_proof, ⟨Block493.block493_reallog_certificate_proof, ⟨Block494.block494_reallog_certificate_proof, ⟨Block495.block495_reallog_certificate_proof, ⟨Block496.block496_reallog_certificate_proof, ⟨Block497.block497_reallog_certificate_proof, ⟨Block498.block498_reallog_certificate_proof, ⟨Block499.block499_reallog_certificate_proof, ⟨Block500.block500_reallog_certificate_proof, ⟨Block501.block501_reallog_certificate_proof, ⟨Block502.block502_reallog_certificate_proof, ⟨Block503.block503_reallog_certificate_proof, ⟨Block504.block504_reallog_certificate_proof, ⟨Block505.block505_reallog_certificate_proof, ⟨Block506.block506_reallog_certificate_proof, ⟨Block507.block507_reallog_certificate_proof, ⟨Block508.block508_reallog_certificate_proof, ⟨Block509.block509_reallog_certificate_proof, ⟨Block510.block510_reallog_certificate_proof, ⟨Block511.block511_reallog_certificate_proof, ⟨Block512.block512_reallog_certificate_proof, ⟨Block513.block513_reallog_certificate_proof, ⟨Block514.block514_reallog_certificate_proof, ⟨Block515.block515_reallog_certificate_proof, ⟨Block516.block516_reallog_certificate_proof, ⟨Block517.block517_reallog_certificate_proof, ⟨Block518.block518_reallog_certificate_proof, ⟨Block519.block519_reallog_certificate_proof, ⟨Block520.block520_reallog_certificate_proof, ⟨Block521.block521_reallog_certificate_proof, ⟨Block522.block522_reallog_certificate_proof, ⟨Block523.block523_reallog_certificate_proof, ⟨Block524.block524_reallog_certificate_proof, ⟨Block525.block525_reallog_certificate_proof, ⟨Block526.block526_reallog_certificate_proof, ⟨Block527.block527_reallog_certificate_proof, ⟨Block528.block528_reallog_certificate_proof, ⟨Block529.block529_reallog_certificate_proof, ⟨Block530.block530_reallog_certificate_proof, ⟨Block531.block531_reallog_certificate_proof, ⟨Block532.block532_reallog_certificate_proof, ⟨Block533.block533_reallog_certificate_proof, ⟨Block534.block534_reallog_certificate_proof, ⟨Block535.block535_reallog_certificate_proof, ⟨Block536.block536_reallog_certificate_proof, ⟨Block537.block537_reallog_certificate_proof, ⟨Block538.block538_reallog_certificate_proof, ⟨Block539.block539_reallog_certificate_proof, ⟨Block540.block540_reallog_certificate_proof, ⟨Block541.block541_reallog_certificate_proof, ⟨Block542.block542_reallog_certificate_proof, ⟨Block543.block543_reallog_certificate_proof, ⟨Block544.block544_reallog_certificate_proof, ⟨Block545.block545_reallog_certificate_proof, ⟨Block546.block546_reallog_certificate_proof, ⟨Block547.block547_reallog_certificate_proof, ⟨Block548.block548_reallog_certificate_proof, ⟨Block549.block549_reallog_certificate_proof, ⟨Block550.block550_reallog_certificate_proof, ⟨Block551.block551_reallog_certificate_proof, ⟨Block552.block552_reallog_certificate_proof, ⟨Block553.block553_reallog_certificate_proof, ⟨Block554.block554_reallog_certificate_proof, ⟨Block555.block555_reallog_certificate_proof, ⟨Block556.block556_reallog_certificate_proof, ⟨Block557.block557_reallog_certificate_proof, ⟨Block558.block558_reallog_certificate_proof, Block559.block559_reallog_certificate_proof⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩⟩
+
+end M1817475
+end Erdos1038Lean
